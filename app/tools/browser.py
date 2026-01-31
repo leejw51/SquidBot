@@ -102,11 +102,23 @@ class BrowserScreenshotTool(Tool):
 
     async def execute(self, full_page: bool = False) -> str:
         try:
+            import tempfile
+            from datetime import datetime
+
             manager = await BrowserManager.get_instance()
             page = await manager.get_page()
             screenshot = await page.screenshot(full_page=full_page)
-            b64 = base64.b64encode(screenshot).decode()
-            return f"Screenshot taken (base64, {len(screenshot)} bytes):\ndata:image/png;base64,{b64[:100]}..."
+
+            # Save to temp file for Telegram
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            temp_path = tempfile.gettempdir() + f"/squidbot_screenshot_{timestamp}.png"
+            with open(temp_path, "wb") as f:
+                f.write(screenshot)
+
+            # Return special format that server can detect
+            return (
+                f"[SCREENSHOT:{temp_path}] Screenshot saved ({len(screenshot)} bytes)"
+            )
         except Exception as e:
             return f"Screenshot error: {str(e)}"
 

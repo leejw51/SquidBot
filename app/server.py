@@ -186,6 +186,62 @@ async def run_tcp_server():
 # ============================================================
 
 
+async def send_response_with_images(update, response: str):
+    """Send response to Telegram, extracting and sending any screenshots as photos."""
+    import os
+    import re
+
+    max_length = 4096
+
+    # Find all screenshots in response - multiple patterns
+    screenshots = []
+
+    # Pattern 1: [SCREENSHOT:path]
+    pattern1 = r"\[SCREENSHOT:([^\]]+)\]"
+    screenshots.extend(re.findall(pattern1, response))
+
+    # Pattern 2: backtick-wrapped paths like `/.../squidbot_screenshot_*.png`
+    pattern2 = r"`([^`]*squidbot_screenshot_[^`]+\.png)`"
+    screenshots.extend(re.findall(pattern2, response))
+
+    # Pattern 3: plain paths /tmp/squidbot_screenshot_*.png or /var/folders/.../squidbot_screenshot_*.png
+    pattern3 = r"(/(?:tmp|var/folders)[^\s`]*squidbot_screenshot_[^\s`]+\.png)"
+    screenshots.extend(re.findall(pattern3, response))
+
+    # Deduplicate
+    screenshots = list(set(screenshots))
+
+    # Remove screenshot paths from text response
+    text_response = response
+    text_response = re.sub(pattern1 + r"[^\n]*\n?", "", text_response)
+    text_response = re.sub(
+        r"Saved at:\s*\n?\s*" + pattern2 + r"\s*\n?", "", text_response
+    )
+    text_response = re.sub(pattern2, "", text_response)
+    text_response = text_response.strip()
+
+    # Send text response if any
+    if text_response:
+        if len(text_response) <= max_length:
+            await update.message.reply_text(text_response)
+        else:
+            for i in range(0, len(text_response), max_length):
+                chunk = text_response[i : i + max_length]
+                await update.message.reply_text(chunk)
+
+    # Send screenshots as photos
+    for screenshot_path in screenshots:
+        if os.path.exists(screenshot_path):
+            try:
+                with open(screenshot_path, "rb") as photo:
+                    await update.message.reply_photo(photo=photo, caption="Screenshot")
+                # Clean up temp file
+                os.remove(screenshot_path)
+                logger.info(f"Sent screenshot: {screenshot_path}")
+            except Exception as e:
+                logger.error(f"Failed to send screenshot: {e}")
+
+
 async def run_telegram_bot():
     """Run the Telegram bot."""
     global telegram_app
@@ -229,13 +285,8 @@ async def run_telegram_bot():
             )
             sessions[chat_id] = updated_history
 
-            max_length = 4096
-            if len(response) <= max_length:
-                await update.message.reply_text(response)
-            else:
-                for i in range(0, len(response), max_length):
-                    chunk = response[i : i + max_length]
-                    await update.message.reply_text(chunk)
+            # Check for screenshots in response
+            await send_response_with_images(update, response)
 
             if scheduler:
                 scheduler.reload_jobs()
