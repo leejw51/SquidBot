@@ -1,0 +1,17 @@
+openai>=1.0
+python-telegram-bot>=20.0
+playwright
+duckduckgo-search
+apscheduler>=3.10
+python-dotenv
+
+# Async support
+aiofiles
+aiosqlite
+
+# Vector search
+numpy
+
+# Testing
+pytest>=7.0
+pytest-asyncio>=0.21
