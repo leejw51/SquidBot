@@ -15,3 +15,6 @@ numpy
 # Testing
 pytest>=7.0
 pytest-asyncio>=0.21
+
+# Packaging
+pyinstaller>=6.0

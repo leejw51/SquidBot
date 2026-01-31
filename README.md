@@ -204,11 +204,19 @@ You are a helpful AI assistant with the following traits:
 | `make test-chaining` | Run tool chaining tests |
 | `make test-proactive` | Run proactive messaging tests |
 
+### Packaging
+
+| Command | Description |
+|---------|-------------|
+| `make package` | Build standalone binary using PyInstaller |
+| `make package-debug` | Build binary with console output (for debugging) |
+| `make package-clean` | Remove PyInstaller build artifacts |
+
 ### Cleanup
 
 | Command | Description |
 |---------|-------------|
-| `make clean` | Remove cache files (__pycache__, .pytest_cache, etc.) |
+| `make clean` | Remove all cache and build files |
 
 ### Poetry Commands
 

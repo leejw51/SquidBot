@@ -1,5 +1,5 @@
 .PHONY: all start stop stopall restart status logs client test testall integrationtest clean help \
-        install install-dev poetry-install poetry-install-dev
+        install install-dev poetry-install poetry-install-dev package package-clean
 
 # Default target - start the server
 all: start
@@ -127,6 +127,39 @@ poetry-client:
 	poetry run python client.py
 
 # ============================================================
+# Packaging
+# ============================================================
+
+# Build standalone binary with PyInstaller
+package:
+	pyinstaller --onefile --name squidbot \
+		--hidden-import=tiktoken_ext.openai_public \
+		--hidden-import=tiktoken_ext \
+		--hidden-import=aiosqlite \
+		--hidden-import=numpy \
+		--collect-data duckduckgo_search \
+		--add-data "skills_template:skills_template" \
+		server.py
+	@echo "Binary created: dist/squidbot"
+
+# Build with console visible (for debugging)
+package-debug:
+	pyinstaller --onefile --name squidbot-debug \
+		--console \
+		--hidden-import=tiktoken_ext.openai_public \
+		--hidden-import=tiktoken_ext \
+		--hidden-import=aiosqlite \
+		--hidden-import=numpy \
+		--collect-data duckduckgo_search \
+		--add-data "skills_template:skills_template" \
+		server.py
+	@echo "Debug binary created: dist/squidbot-debug"
+
+# Clean PyInstaller artifacts
+package-clean:
+	rm -rf build/ dist/ *.spec
+
+# ============================================================
 # Cleanup
 # ============================================================
 
@@ -137,6 +170,7 @@ clean:
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 	rm -rf .coverage htmlcov/
+	rm -rf build/ dist/ *.spec
 
 # ============================================================
 # Help
@@ -169,5 +203,10 @@ help:
 	@echo "  make install      - Install dependencies (pip)"
 	@echo "  make install-dev  - Install with dev dependencies"
 	@echo ""
+	@echo "Packaging:"
+	@echo "  make package       - Build standalone binary"
+	@echo "  make package-debug - Build binary with console"
+	@echo "  make package-clean - Remove build artifacts"
+	@echo ""
 	@echo "Cleanup:"
-	@echo "  make clean        - Remove cache files"
+	@echo "  make clean        - Remove all cache and build files"

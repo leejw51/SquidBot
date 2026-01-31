@@ -88,3 +88,8 @@ Thumbs.db
 *.tar.gz
 *.zip
 .env
+
+# PyInstaller
+build/
+dist/
+*.spec
