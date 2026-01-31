@@ -12,6 +12,7 @@ sys.path.insert(0, ".")
 
 # Load real API key from .env
 from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
 # Get real API key before it gets overwritten
@@ -22,10 +23,10 @@ from openai import AsyncOpenAI
 
 pytestmark = pytest.mark.integration
 
-from agent import run_agent
-from tools.cron import load_cron_jobs, save_cron_jobs
-from memory_db import init_db
 import agent as agent_module
+from agent import run_agent
+from memory_db import init_db
+from tools.cron import load_cron_jobs, save_cron_jobs
 
 # Replace agent's client with one using real API key
 agent_module.client = AsyncOpenAI(api_key=REAL_API_KEY)
@@ -51,7 +52,9 @@ class TestToolChainingIntegration:
     async def test_memory_store_then_retrieve(self):
         """Test: Store in memory → Retrieve from memory."""
         # Store
-        response = await run_agent("Remember that my favorite programming language is Python")
+        response = await run_agent(
+            "Remember that my favorite programming language is Python"
+        )
         print(f"Store response: {response}")
         assert "python" in response.lower() or "remember" in response.lower()
 
@@ -64,9 +67,11 @@ class TestToolChainingIntegration:
     async def test_cron_create_list_delete(self):
         """Test: Create cron → List cron → Delete cron."""
         # Create
-        response = await run_agent("Set a reminder for 10 minutes from now to take a break")
+        response = await run_agent(
+            "Set a reminder for 10 minutes from now to take a break"
+        )
         print(f"Create response: {response}")
-        
+
         jobs = load_cron_jobs()
         assert len(jobs) >= 1, "Should have created a job"
         job_id = jobs[0]["id"]
@@ -79,7 +84,7 @@ class TestToolChainingIntegration:
         # Delete
         response = await run_agent(f"Delete the scheduled task with ID {job_id}")
         print(f"Delete response: {response}")
-        
+
         jobs = load_cron_jobs()
         assert len(jobs) == 0, "Job should be deleted"
 
@@ -87,11 +92,15 @@ class TestToolChainingIntegration:
     async def test_memory_then_cron_chain(self):
         """Test: Remember something → Create reminder about it."""
         # Remember
-        response = await run_agent("Remember that I have a dentist appointment next Tuesday")
+        response = await run_agent(
+            "Remember that I have a dentist appointment next Tuesday"
+        )
         print(f"Memory response: {response}")
 
         # Create reminder
-        response = await run_agent("Set a reminder for 5 minutes from now about my appointment")
+        response = await run_agent(
+            "Set a reminder for 5 minutes from now about my appointment"
+        )
         print(f"Cron response: {response}")
 
         jobs = load_cron_jobs()
@@ -147,7 +156,11 @@ class TestToolChainingIntegration:
         response = await run_agent("Delete scheduled task with ID 9999")
         print(f"Delete response: {response}")
         # Should handle gracefully without crashing
-        assert "not found" in response.lower() or "no" in response.lower() or "doesn't exist" in response.lower()
+        assert (
+            "not found" in response.lower()
+            or "no" in response.lower()
+            or "doesn't exist" in response.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_search_empty_memory(self):
@@ -172,7 +185,9 @@ async def run_all_integration_tests():
 
     async def test_memory_store_then_retrieve():
         """Test: Store in memory → Retrieve from memory."""
-        response = await run_agent("Remember that my favorite programming language is Python")
+        response = await run_agent(
+            "Remember that my favorite programming language is Python"
+        )
         print(f"Store response: {response}")
         assert "python" in response.lower() or "remember" in response.lower()
         response = await run_agent("What is my favorite programming language?")
@@ -181,7 +196,9 @@ async def run_all_integration_tests():
 
     async def test_cron_create_list_delete():
         """Test: Create cron → List cron → Delete cron."""
-        response = await run_agent("Set a reminder for 10 minutes from now to take a break")
+        response = await run_agent(
+            "Set a reminder for 10 minutes from now to take a break"
+        )
         print(f"Create response: {response}")
         jobs = load_cron_jobs()
         assert len(jobs) >= 1, "Should have created a job"
@@ -195,9 +212,13 @@ async def run_all_integration_tests():
 
     async def test_memory_then_cron_chain():
         """Test: Remember something → Create reminder about it."""
-        response = await run_agent("Remember that I have a dentist appointment next Tuesday")
+        response = await run_agent(
+            "Remember that I have a dentist appointment next Tuesday"
+        )
         print(f"Memory response: {response}")
-        response = await run_agent("Set a reminder for 5 minutes from now about my appointment")
+        response = await run_agent(
+            "Set a reminder for 5 minutes from now about my appointment"
+        )
         print(f"Cron response: {response}")
         jobs = load_cron_jobs()
         assert len(jobs) >= 1, "Should have created a reminder"

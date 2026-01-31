@@ -194,9 +194,11 @@ You are a helpful AI assistant with the following traits:
 
 | Command | Description |
 |---------|-------------|
-| `make test` | Run all tests |
-| `make test-verbose` | Run tests with extra output |
-| `make test-cov` | Run tests with coverage report |
+| `make test` | Run unit tests only |
+| `make testall` | Run all tests (unit + integration) |
+| `make integrationtest` | Run integration tests only |
+| `make test-verbose` | Run unit tests with extra output |
+| `make test-cov` | Run unit tests with coverage report |
 | `make test-memory` | Run memory tests only |
 | `make test-tools` | Run tool tests only |
 | `make test-chaining` | Run tool chaining tests |

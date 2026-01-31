@@ -1,4 +1,4 @@
-.PHONY: all start stop stopall restart status logs client test clean help \
+.PHONY: all start stop stopall restart status logs client test testall integrationtest clean help \
         install install-dev poetry-install poetry-install-dev
 
 # Default target - start the server
@@ -48,17 +48,25 @@ server:
 # Testing
 # ============================================================
 
-# Run all tests
+# Run unit tests only (excludes integration tests)
 test:
-	pytest tests/ -v
+	pytest tests/ -v --ignore=tests/test_integration_chaining.py
+
+# Run all tests (unit + integration)
+testall:
+	pytest tests/ test_cron_integration.py test_cron_verify.py -v
+
+# Run integration tests only
+integrationtest:
+	pytest tests/test_integration_chaining.py test_cron_integration.py test_cron_verify.py -v
 
 # Run tests with extra verbosity
 test-verbose:
-	pytest tests/ -v -s
+	pytest tests/ -v -s --ignore=tests/test_integration_chaining.py
 
 # Run tests with coverage
 test-cov:
-	pytest tests/ -v --cov=. --cov-report=term-missing
+	pytest tests/ -v --cov=. --cov-report=term-missing --ignore=tests/test_integration_chaining.py
 
 # Run specific test file
 test-memory:
@@ -152,8 +160,10 @@ help:
 	@echo "  make server       - Run server in foreground (debug)"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test         - Run all tests"
-	@echo "  make test-cov     - Run tests with coverage"
+	@echo "  make test            - Run unit tests only"
+	@echo "  make testall         - Run all tests (unit + integration)"
+	@echo "  make integrationtest - Run integration tests only"
+	@echo "  make test-cov        - Run unit tests with coverage"
 	@echo ""
 	@echo "Installation:"
 	@echo "  make install      - Install dependencies (pip)"

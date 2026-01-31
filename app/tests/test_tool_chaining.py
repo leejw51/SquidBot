@@ -270,7 +270,7 @@ class TestToolChainScenarios:
     @pytest.mark.asyncio
     async def test_cron_clear_workflow(self):
         """Test creating multiple cron jobs then clearing all."""
-        from tools.cron import save_cron_jobs, load_cron_jobs
+        from tools.cron import load_cron_jobs, save_cron_jobs
 
         save_cron_jobs([])
 
@@ -366,9 +366,7 @@ class TestToolChainingErrors:
     @pytest.mark.asyncio
     async def test_memory_search_no_results(self):
         """Test memory search with no matching results."""
-        result = await execute_tool(
-            "memory_search", {"query": "xyznonexistent12345"}
-        )
+        result = await execute_tool("memory_search", {"query": "xyznonexistent12345"})
         # Should return empty or "no results" message
         assert result is not None
 
