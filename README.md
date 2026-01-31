@@ -1,6 +1,8 @@
 # SquidBot
 
-![SquidBot](app/squidbot.png)
+<p align="center">
+  <img src="squidbot.png" alt="SquidBot" width="200">
+</p>
 
 An autonomous AI agent with Telegram integration, persistent memory, web search, browser automation, and scheduled tasks.
 
