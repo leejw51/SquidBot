@@ -159,9 +159,9 @@ poetry-client:
 # Packaging
 # ============================================================
 
-# Build standalone binary with PyInstaller
+# Build standalone binary with PyInstaller (--onedir for faster startup, no decompression)
 package:
-	pyinstaller --onefile --name squidbot \
+	pyinstaller --onedir --name squidbot \
 		--hidden-import=tiktoken_ext.openai_public \
 		--hidden-import=tiktoken_ext \
 		--hidden-import=aiosqlite \
@@ -169,11 +169,11 @@ package:
 		--collect-data duckduckgo_search \
 		--add-data "skills_template:skills_template" \
 		server.py
-	@echo "Binary created: dist/squidbot"
+	@echo "Binary created: dist/squidbot/squidbot"
 
 # Build with console visible (for debugging)
 package-debug:
-	pyinstaller --onefile --name squidbot-debug \
+	pyinstaller --onedir --name squidbot-debug \
 		--console \
 		--hidden-import=tiktoken_ext.openai_public \
 		--hidden-import=tiktoken_ext \
@@ -182,7 +182,7 @@ package-debug:
 		--collect-data duckduckgo_search \
 		--add-data "skills_template:skills_template" \
 		server.py
-	@echo "Debug binary created: dist/squidbot-debug"
+	@echo "Debug binary created: dist/squidbot-debug/squidbot-debug"
 
 # Clean PyInstaller artifacts
 package-clean:
