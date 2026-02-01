@@ -3,6 +3,7 @@
 SquidBot Server
 
 Runs the Telegram bot (optional) and exposes a local TCP port for client connections.
+Supports multiple channels via the session/lane abstraction.
 """
 import asyncio
 import json
@@ -10,8 +11,13 @@ import logging
 import signal
 
 from agent import run_agent_with_history
+from channels import (ChannelRouter, MessagePayload, TCPAdapter,
+                      TelegramAdapter, get_channel_router)
 from config import OPENAI_API_KEY, SQUID_PORT, TELEGRAM_BOT_TOKEN
+from lanes import LANE_CRON, LANE_MAIN, CommandLane
 from scheduler import Scheduler
+from session import (ChannelType, DeliveryContext, Session,
+                     get_session_manager, record_inbound_session)
 
 # Server configuration
 SERVER_HOST = "127.0.0.1"
@@ -22,10 +28,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
-# Session storage
-sessions: dict[int, list[dict]] = {}
-client_sessions: dict[str, list[dict]] = {}
 
 # Connected TCP clients (for broadcasting scheduled messages)
 connected_clients: dict[str, asyncio.StreamWriter] = {}
@@ -39,6 +41,12 @@ telegram_app = None
 # Server running flag
 running = True
 
+# Session manager
+session_manager = get_session_manager()
+
+# Channel router for multi-channel broadcasting
+channel_router = get_channel_router()
+
 
 # ============================================================
 # Message broadcasting
@@ -46,27 +54,23 @@ running = True
 
 
 async def broadcast_to_clients(message: str):
-    """Send a message to all connected TCP clients."""
+    """Send a message to all connected TCP clients via channel router."""
     if not connected_clients:
         logger.info(f"[Broadcast] No clients connected: {message[:50]}...")
         return
 
-    notification = {"status": "notification", "response": message}
-    data = json.dumps(notification) + "\n"
-
-    disconnected = []
-    for client_id, writer in connected_clients.items():
-        try:
-            writer.write(data.encode())
-            await writer.drain()
+    payload = MessagePayload(text=message)
+    for client_id in list(connected_clients.keys()):
+        context = DeliveryContext(
+            channel=ChannelType.TCP,
+            recipient_id=client_id,
+        )
+        success = await channel_router.send(context, payload)
+        if success:
             logger.info(f"[Broadcast] Sent to {client_id}")
-        except Exception as e:
-            logger.error(f"Failed to send to {client_id}: {e}")
-            disconnected.append(client_id)
-
-    # Remove disconnected clients
-    for client_id in disconnected:
-        connected_clients.pop(client_id, None)
+        else:
+            # Remove disconnected clients
+            connected_clients.pop(client_id, None)
 
 
 async def send_to_telegram(message: str):
@@ -76,22 +80,33 @@ async def send_to_telegram(message: str):
     if not telegram_app or not scheduler or not scheduler.chat_id:
         return
 
-    try:
-        await telegram_app.bot.send_message(chat_id=scheduler.chat_id, text=message)
+    context = DeliveryContext(
+        channel=ChannelType.TELEGRAM,
+        recipient_id=str(scheduler.chat_id),
+    )
+    payload = MessagePayload(text=message)
+
+    success = await channel_router.send(context, payload)
+    if success:
         logger.info(f"[Telegram] Sent message to chat {scheduler.chat_id}")
-    except Exception as e:
-        logger.error(f"Failed to send to Telegram: {e}")
 
 
 async def send_scheduled_message(message: str):
-    """Send scheduled message to all channels (Telegram + TCP clients)."""
+    """Send scheduled message to all active channels."""
     logger.info(f"[Scheduled] {message[:100]}...")
 
-    # Send to TCP clients
-    await broadcast_to_clients(message)
+    # Broadcast to all active sessions
+    contexts = session_manager.get_active_delivery_contexts()
+    payload = MessagePayload(text=message)
 
-    # Send to Telegram
-    await send_to_telegram(message)
+    if contexts:
+        results = await channel_router.broadcast(contexts, payload)
+        success_count = sum(1 for v in results.values() if v)
+        logger.info(f"[Scheduled] Broadcast to {success_count}/{len(results)} channels")
+    else:
+        # Fallback to legacy broadcast
+        await broadcast_to_clients(message)
+        await send_to_telegram(message)
 
 
 # ============================================================
@@ -108,9 +123,16 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
     # Register client for broadcasts
     connected_clients[client_id] = writer
 
-    # Initialize session for this client
-    if client_id not in client_sessions:
-        client_sessions[client_id] = []
+    # Get or create session for this TCP client
+    session = record_inbound_session(
+        channel=ChannelType.TCP,
+        recipient_id=client_id,
+        lane=LANE_MAIN,
+        delivery_context=DeliveryContext(
+            channel=ChannelType.TCP,
+            recipient_id=client_id,
+        ),
+    )
 
     try:
         while True:
@@ -125,11 +147,12 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 message = request.get("message", "")
 
                 if command == "chat":
-                    # Run agent
+                    # Run agent with session history
                     response, updated_history = await run_agent_with_history(
-                        message, client_sessions[client_id]
+                        message, session.history
                     )
-                    client_sessions[client_id] = updated_history
+                    session.history = updated_history
+                    session_manager.update(session)
 
                     # Reload scheduler jobs in case new ones were created
                     if scheduler:
@@ -138,7 +161,8 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                     reply = {"status": "ok", "response": response}
 
                 elif command == "clear":
-                    client_sessions[client_id] = []
+                    session.clear_history()
+                    session_manager.update(session)
                     reply = {"status": "ok", "response": "Conversation cleared."}
 
                 elif command == "ping":
@@ -263,7 +287,10 @@ async def run_telegram_bot():
 
     async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
-        sessions[chat_id] = []
+        session = session_manager.get(ChannelType.TELEGRAM, str(chat_id))
+        if session:
+            session.clear_history()
+            session_manager.update(session)
         await update.message.reply_text("Conversation history cleared.")
 
     async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -274,16 +301,30 @@ async def run_telegram_bot():
         if scheduler:
             scheduler.set_chat_id(chat_id)
 
-        if chat_id not in sessions:
-            sessions[chat_id] = []
+        # Get or create session for this Telegram chat
+        session = record_inbound_session(
+            channel=ChannelType.TELEGRAM,
+            recipient_id=str(chat_id),
+            lane=LANE_MAIN,
+            delivery_context=DeliveryContext(
+                channel=ChannelType.TELEGRAM,
+                recipient_id=str(chat_id),
+                thread_id=(
+                    str(update.message.message_thread_id)
+                    if update.message.message_thread_id
+                    else None
+                ),
+            ),
+        )
 
         await context.bot.send_chat_action(chat_id=chat_id, action="typing")
 
         try:
             response, updated_history = await run_agent_with_history(
-                user_message, sessions[chat_id]
+                user_message, session.history
             )
-            sessions[chat_id] = updated_history
+            session.history = updated_history
+            session_manager.update(session)
 
             # Check for screenshots in response
             await send_response_with_images(update, response)
@@ -306,6 +347,9 @@ async def run_telegram_bot():
     # Initialize and run
     await telegram_app.initialize()
     await telegram_app.start()
+
+    # Register Telegram channel adapter
+    channel_router.register(TelegramAdapter(telegram_app.bot))
     await telegram_app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
 
     # Wait until stopped
@@ -331,6 +375,12 @@ async def async_main():
     if not OPENAI_API_KEY:
         logger.error("OPENAI_API_KEY not set")
         return
+
+    # Register TCP channel adapter
+    def get_tcp_writer(client_id: str):
+        return connected_clients.get(client_id)
+
+    channel_router.register(TCPAdapter(get_tcp_writer))
 
     # Setup scheduler with proper send_message callback
     async def run_agent_for_scheduler(prompt: str) -> str:
