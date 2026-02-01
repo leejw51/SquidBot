@@ -17,6 +17,9 @@ python-dotenv = "^1.0"
 aiofiles = "^23.0"
 aiosqlite = "^0.19"
 numpy = "^1.26"
+# Web3 plugin dependencies
+web3 = "^7.0"
+mnemonic = "^0.21"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"

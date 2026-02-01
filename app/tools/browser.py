@@ -144,7 +144,8 @@ class BrowserSnapshotTool(Tool):
             page = await manager.get_page()
 
             # Get simplified page content
-            content = await page.evaluate("""() => {
+            content = await page.evaluate(
+                """() => {
                 const walk = (node, depth = 0) => {
                     let result = [];
                     const indent = '  '.repeat(depth);
@@ -176,7 +177,8 @@ class BrowserSnapshotTool(Tool):
                     return result;
                 };
                 return walk(document.body).slice(0, 100).join('\\n');
-            }""")
+            }"""
+            )
 
             title = await page.title()
             url = page.url

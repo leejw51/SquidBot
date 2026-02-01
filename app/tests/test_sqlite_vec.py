@@ -149,13 +149,15 @@ class TestSqliteVecWithJoin:
         conn.enable_load_extension(False)
 
         # Create regular table
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE documents (
                 id INTEGER PRIMARY KEY,
                 title TEXT,
                 content TEXT
             )
-        """)
+        """
+        )
 
         # Create vec table
         conn.execute(

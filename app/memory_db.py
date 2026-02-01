@@ -153,7 +153,8 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
     vec_available = _load_vec_extension(conn)
 
     # Create memories table
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS memories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT NOT NULL,
@@ -162,10 +163,12 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
             created_at TEXT NOT NULL,
             metadata TEXT
         )
-    """)
+    """
+    )
 
     # Create chunks table for large documents
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS memory_chunks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             memory_id INTEGER NOT NULL,
@@ -176,7 +179,8 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
             embedding BLOB,
             FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
         )
-    """)
+    """
+    )
 
     # Create indices
     conn.execute(
@@ -189,18 +193,22 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
     # Create vec0 virtual table for fast KNN search if available
     if vec_available:
         try:
-            conn.execute(f"""
+            conn.execute(
+                f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS memory_vec USING vec0(
                     memory_id INTEGER PRIMARY KEY,
                     embedding float[{EMBEDDING_DIM}]
                 )
-            """)
-            conn.execute(f"""
+            """
+            )
+            conn.execute(
+                f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vec USING vec0(
                     chunk_id INTEGER PRIMARY KEY,
                     embedding float[{EMBEDDING_DIM}]
                 )
-            """)
+            """
+            )
             logger.info("Created vec0 virtual tables for fast KNN search")
         except Exception as e:
             logger.warning(f"Failed to create vec0 tables: {e}")
@@ -223,7 +231,8 @@ async def init_db():
         await db.execute("PRAGMA cache_size=-64000")
         await db.execute("PRAGMA busy_timeout=5000")
         # Create memories table
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT NOT NULL,
@@ -232,10 +241,12 @@ async def init_db():
                 created_at TEXT NOT NULL,
                 metadata TEXT
             )
-        """)
+        """
+        )
 
         # Create chunks table for large documents
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS memory_chunks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 memory_id INTEGER NOT NULL,
@@ -246,7 +257,8 @@ async def init_db():
                 embedding BLOB,
                 FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
             )
-        """)
+        """
+        )
 
         # Create indices
         await db.execute(
@@ -528,11 +540,13 @@ async def _search_memory_fallback(
 
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute("""
+        cursor = await db.execute(
+            """
             SELECT id, content, category, created_at, metadata, embedding
             FROM memories
             WHERE embedding IS NOT NULL
-            """)
+            """
+        )
         rows = await cursor.fetchall()
 
     if not rows:

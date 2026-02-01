@@ -16,6 +16,8 @@ An autonomous AI agent with Telegram integration, persistent memory, web search,
 - **Browser Automation** - Browse and interact with websites via Playwright
 - **Scheduled Tasks** - Set reminders and recurring tasks with cron expressions
 - **Coding Agent** - Write, run, and test Zig and Python code in isolated workspace
+- **Plugin System** - Extend functionality with plugins and lifecycle hooks
+- **Web3 Integration** - Blockchain wallet with balance checking and CRO transfers
 - **Custom Skills** - Extend agent behavior with markdown skill files
 - **Custom Character** - Define AI personality and communication style
 
@@ -63,6 +65,12 @@ SQUIDBOT_HOME=~/.squidbot                     # Default: ~/.squidbot
 CHARACTER_NAME=Assistant                      # Bot's name
 CHARACTER_PERSONA=You are a helpful assistant # Personality description
 CHARACTER_STYLE=helpful, friendly, concise    # Communication style
+
+# Optional - Web3 Plugin (Blockchain)
+SQUIDBOT_MNEMONICS=                           # BIP39 mnemonic (random if empty)
+SQUIDBOT_WALLET_INDEX=0                       # HD wallet derivation index
+SQUIDBOT_CHAINID=338                          # Chain ID (338 = Cronos testnet)
+SQUIDBOT_RPC=https://evm-dev-t3.cronos.org    # RPC endpoint URL
 ```
 
 ### Getting API Keys
@@ -176,6 +184,10 @@ You are a helpful AI assistant with the following traits:
 | `zig_build` | Build Zig projects (with release option) |
 | `zig_test` | Run Zig tests |
 | `python_test` | Run Python tests with pytest |
+| `wallet_info` | Get wallet address and chain info (Web3 Plugin) |
+| `get_balance` | Get CRO balance of wallet or address (Web3 Plugin) |
+| `send_cro` | Send CRO to an address (Web3 Plugin) |
+| `get_tx_count` | Get transaction count/nonce (Web3 Plugin) |
 
 ## Coding Agent
 
@@ -224,6 +236,138 @@ Agent: [Uses code_write to create fibonacci.zig with tests]
 
 - **Python**: Uses the same Python interpreter as SquidBot
 - **Zig**: Optional - install from [ziglang.org](https://ziglang.org/download/) for Zig support
+
+## Plugin System
+
+SquidBot supports a modular plugin architecture for extending functionality. Plugins can provide tools and register lifecycle hooks.
+
+### Plugin Structure
+
+```
+app/plugins/
+├── __init__.py       # Plugin exports
+├── base.py           # Plugin base class
+├── hooks.py          # Hook system
+├── loader.py         # Plugin loader/registry
+└── web3_plugin.py    # Web3 blockchain plugin
+```
+
+### Creating a Plugin
+
+```python
+from plugins.base import Plugin, PluginApi, PluginManifest
+from plugins.hooks import HookName, BeforeToolCallEvent, BeforeToolCallResult
+from tools.base import Tool
+
+class MyPlugin(Plugin):
+    @property
+    def manifest(self) -> PluginManifest:
+        return PluginManifest(
+            id="my-plugin",
+            name="My Plugin",
+            description="A custom plugin",
+            version="1.0.0",
+        )
+
+    def get_tools(self) -> list[Tool]:
+        return [MyCustomTool()]
+
+    def register_hooks(self, api: PluginApi) -> None:
+        api.on(HookName.BEFORE_TOOL_CALL, self.on_before_tool, priority=10)
+
+    async def on_before_tool(self, event: BeforeToolCallEvent, ctx) -> BeforeToolCallResult | None:
+        # Intercept and optionally block tool calls
+        if event.tool_name == "dangerous_tool":
+            return BeforeToolCallResult(block=True, block_reason="Blocked!")
+        return None
+
+def get_plugin() -> Plugin:
+    return MyPlugin()
+```
+
+### Available Hooks
+
+| Hook | Type | Description |
+|------|------|-------------|
+| `before_agent_start` | Modifying | Inject context into system prompt |
+| `agent_end` | Void | React to agent completion |
+| `message_received` | Void | Intercept incoming messages |
+| `message_sending` | Modifying | Modify or cancel outgoing messages |
+| `message_sent` | Void | React to message delivery |
+| `before_tool_call` | Modifying | Block or modify tool parameters |
+| `after_tool_call` | Void | Log or react to tool results |
+| `session_start` | Void | Track session start |
+| `session_end` | Void | Track session end |
+
+**Hook Types:**
+- **Void**: Fire-and-forget, runs in parallel
+- **Modifying**: Sequential execution, can return modified results
+
+### Hook Priority
+
+Hooks with higher priority run first. Default priority is 0.
+
+```python
+api.on(HookName.BEFORE_TOOL_CALL, handler, priority=100)  # Runs first
+api.on(HookName.BEFORE_TOOL_CALL, handler, priority=10)   # Runs second
+api.on(HookName.BEFORE_TOOL_CALL, handler)                # Runs last (priority=0)
+```
+
+## Web3 Plugin
+
+The Web3 plugin provides blockchain wallet functionality for the Cronos chain.
+
+### Features
+
+- **Wallet Management**: Create wallet from mnemonic or generate random
+- **Balance Checking**: Query CRO balance for any address
+- **Send Transactions**: Transfer CRO to other addresses
+- **Transaction Count**: Get nonce for an address
+
+### Configuration
+
+Set these environment variables in `.env`:
+
+```bash
+SQUIDBOT_MNEMONICS=word1 word2 ... word12    # BIP39 mnemonic (12 or 24 words)
+SQUIDBOT_WALLET_INDEX=0                       # HD derivation index
+SQUIDBOT_CHAINID=338                          # 338=Cronos testnet, 25=Cronos mainnet
+SQUIDBOT_RPC=https://evm-dev-t3.cronos.org    # RPC endpoint
+```
+
+If `SQUIDBOT_MNEMONICS` is not set, a random wallet is generated on each startup.
+
+### Web3 Tools
+
+| Tool | Description |
+|------|-------------|
+| `wallet_info` | Get wallet address, chain ID, and connection status |
+| `get_balance` | Get CRO balance (own wallet or specified address) |
+| `send_cro` | Send CRO to an address (requires amount and recipient) |
+| `get_tx_count` | Get transaction count (nonce) for address |
+
+### Security Hooks
+
+The Web3 plugin includes security hooks:
+- **Transaction Limit**: Blocks transactions over 100 CRO by default
+- **Logging**: All Web3 tool calls are logged with results
+
+### Example Usage
+
+```
+User: What's my wallet address?
+Agent: [Uses wallet_info]
+       Your wallet address is 0x1aac...05aA on Cronos testnet (chain 338)
+
+User: Check my balance
+Agent: [Uses get_balance]
+       Your balance is 803.16 CRO
+
+User: Send 10 CRO to 0x1961...37d6
+Agent: [Uses send_cro]
+       Sent 10 CRO to 0x1961...37d6
+       Transaction hash: 0x9680c829...
+```
 
 ## Makefile Commands
 
@@ -303,17 +447,26 @@ Agent: [Uses code_write to create fibonacci.zig with tests]
 │         │                │                    │                     │
 │         └────────────────┼────────────────────┘                     │
 │                          ▼                                          │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │                    Plugin System                             │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │   │
+│  │  │   Hooks     │  │  Registry   │  │    Plugin Loader    │  │   │
+│  │  │  (10 types) │  │  (tools)    │  │   (auto-discovery)  │  │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────────────┘  │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                          │                                          │
+│                          ▼                                          │
 │                    ┌───────────┐                                    │
 │                    │   Agent   │ ◄── Skills + Character             │
 │                    │  (GPT-4o) │                                    │
 │                    └─────┬─────┘                                    │
 │                          │                                          │
-│    ┌──────────┬──────────┼──────────┬──────────┐                   │
-│    ▼          ▼          ▼          ▼          ▼                   │
-│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────────┐ │
-│ │ Memory │ │  Web   │ │Browser │ │  Cron  │ │   Coding Agent     │ │
-│ │(SQLite)│ │ Search │ │  Auto  │ │  Jobs  │ │   (Zig/Python)     │ │
-│ └────────┘ └────────┘ └────────┘ └────────┘ └────────────────────┘ │
+│    ┌──────────┬──────────┼──────────┬──────────┬──────────┐        │
+│    ▼          ▼          ▼          ▼          ▼          ▼        │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │
+│ │ Memory │ │  Web   │ │Browser │ │  Cron  │ │ Coding │ │  Web3  │ │
+│ │(SQLite)│ │ Search │ │  Auto  │ │  Jobs  │ │  Agent │ │ Plugin │ │
+│ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
