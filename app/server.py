@@ -13,7 +13,8 @@ import signal
 from agent import run_agent_with_history
 from channels import (ChannelRouter, MessagePayload, TCPAdapter,
                       TelegramAdapter, get_channel_router)
-from config import OPENAI_API_KEY, SQUID_PORT, TELEGRAM_BOT_TOKEN
+from config import (OPENAI_API_KEY, SQUID_PORT, TELEGRAM_BOT_TOKEN,
+                    init_default_files, show_startup_info)
 from lanes import LANE_CRON, LANE_MAIN, CommandLane
 from scheduler import Scheduler
 from session import (ChannelType, DeliveryContext, Session,
@@ -429,6 +430,10 @@ async def async_main():
 
 def main():
     """Main entry point."""
+    # Show configuration and initialize defaults
+    show_startup_info()
+    init_default_files()
+
     logger.info("Starting SquidBot server...")
     asyncio.run(async_main())
 

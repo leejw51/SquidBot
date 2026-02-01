@@ -149,16 +149,20 @@ class TestSqliteVecWithJoin:
         conn.enable_load_extension(False)
 
         # Create regular table
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE documents (
                 id INTEGER PRIMARY KEY,
                 title TEXT,
                 content TEXT
             )
-        """)
+        """
+        )
 
         # Create vec table
-        conn.execute("CREATE VIRTUAL TABLE doc_vec USING vec0(doc_id INTEGER PRIMARY KEY, embedding float[4])")
+        conn.execute(
+            "CREATE VIRTUAL TABLE doc_vec USING vec0(doc_id INTEGER PRIMARY KEY, embedding float[4])"
+        )
 
         # Insert documents
         docs = [
@@ -266,7 +270,11 @@ class TestChunking:
         reconstructed = chunks[0]["text"]
         for chunk in chunks[1:]:
             # Find where this chunk starts in original
-            reconstructed += " " + chunk["text"].split(" ", 1)[-1] if " " in chunk["text"] else chunk["text"]
+            reconstructed += (
+                " " + chunk["text"].split(" ", 1)[-1]
+                if " " in chunk["text"]
+                else chunk["text"]
+            )
 
         # Should have all words (some may be duplicated due to overlap)
         assert "Word" in reconstructed
@@ -319,7 +327,8 @@ class TestMemoryDbIntegration:
     def test_get_memory_stats(self, temp_db):
         """Test memory stats function."""
         import asyncio
-        from memory_db import init_db, get_memory_stats
+
+        from memory_db import get_memory_stats, init_db
 
         asyncio.run(init_db())
         stats = asyncio.run(get_memory_stats())

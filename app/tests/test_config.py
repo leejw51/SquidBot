@@ -156,3 +156,180 @@ class TestConfigPaths:
         # The config module creates DATA_DIR on import
         # We just verify it's a valid path
         assert config.DATA_DIR.is_absolute() or str(config.DATA_DIR).startswith("~")
+
+    def test_character_file_is_path(self):
+        """Test CHARACTER_FILE is a Path object."""
+        import config
+
+        assert isinstance(config.CHARACTER_FILE, Path)
+        assert config.CHARACTER_FILE.name == "CHARACTER.md"
+
+    def test_skills_dir_is_path(self):
+        """Test SKILLS_DIR is a Path object."""
+        import config
+
+        assert isinstance(config.SKILLS_DIR, Path)
+        assert config.SKILLS_DIR.name == "skills"
+
+    def test_coding_dir_is_path(self):
+        """Test CODING_DIR is a Path object."""
+        import config
+
+        assert isinstance(config.CODING_DIR, Path)
+        assert config.CODING_DIR.name == "coding"
+
+    def test_sessions_dir_is_path(self):
+        """Test SESSIONS_DIR is a Path object."""
+        import config
+
+        assert isinstance(config.SESSIONS_DIR, Path)
+        assert config.SESSIONS_DIR.name == "sessions"
+
+
+class TestSquidbotHome:
+    """Test SQUIDBOT_HOME environment variable."""
+
+    def test_default_home_is_dot_squidbot(self, monkeypatch):
+        """Test default home is ~/.squidbot when SQUIDBOT_HOME not set."""
+        monkeypatch.delenv("SQUIDBOT_HOME", raising=False)
+
+        # Re-import to get fresh values
+        import importlib
+
+        import config
+
+        importlib.reload(config)
+
+        assert ".squidbot" in str(config.DATA_DIR)
+
+    def test_custom_home_from_env(self, tmp_path, monkeypatch):
+        """Test custom home from SQUIDBOT_HOME env var."""
+        custom_home = tmp_path / "custom_squidbot"
+        monkeypatch.setenv("SQUIDBOT_HOME", str(custom_home))
+
+        import importlib
+
+        import config
+
+        importlib.reload(config)
+
+        assert config.DATA_DIR == custom_home
+
+
+class TestInitDefaultFiles:
+    """Test init_default_files function."""
+
+    def test_creates_character_file(self, tmp_path, monkeypatch):
+        """Test that init_default_files creates CHARACTER.md."""
+        monkeypatch.setenv("SQUIDBOT_HOME", str(tmp_path))
+
+        import importlib
+
+        import config
+
+        importlib.reload(config)
+
+        # Remove if exists
+        if config.CHARACTER_FILE.exists():
+            config.CHARACTER_FILE.unlink()
+
+        config.init_default_files()
+
+        assert config.CHARACTER_FILE.exists()
+        content = config.CHARACTER_FILE.read_text()
+        assert "Character Definition" in content
+
+    def test_creates_default_skills(self, tmp_path, monkeypatch):
+        """Test that init_default_files creates default skills."""
+        monkeypatch.setenv("SQUIDBOT_HOME", str(tmp_path))
+
+        import importlib
+
+        import config
+
+        importlib.reload(config)
+
+        config.init_default_files()
+
+        search_skill = config.SKILLS_DIR / "search" / "SKILL.md"
+        reminder_skill = config.SKILLS_DIR / "reminder" / "SKILL.md"
+
+        assert search_skill.exists()
+        assert reminder_skill.exists()
+
+        assert "web_search" in search_skill.read_text()
+        assert "cron_create" in reminder_skill.read_text()
+
+    def test_does_not_overwrite_existing(self, tmp_path, monkeypatch):
+        """Test that init_default_files does not overwrite existing files."""
+        monkeypatch.setenv("SQUIDBOT_HOME", str(tmp_path))
+
+        import importlib
+
+        import config
+
+        importlib.reload(config)
+
+        # Create custom character file
+        config.ensure_data_dirs()
+        custom_content = "# My Custom Character"
+        config.CHARACTER_FILE.write_text(custom_content)
+
+        config.init_default_files()
+
+        # Should not be overwritten
+        assert config.CHARACTER_FILE.read_text() == custom_content
+
+    def test_creates_all_directories(self, tmp_path, monkeypatch):
+        """Test that ensure_data_dirs creates all required directories."""
+        monkeypatch.setenv("SQUIDBOT_HOME", str(tmp_path))
+
+        import importlib
+
+        import config
+
+        importlib.reload(config)
+
+        config.ensure_data_dirs()
+
+        assert config.DATA_DIR.exists()
+        assert config.SKILLS_DIR.exists()
+        assert config.CODING_DIR.exists()
+        assert config.SESSIONS_DIR.exists()
+
+
+class TestShowStartupInfo:
+    """Test show_startup_info function."""
+
+    def test_show_startup_info_runs(self, capsys):
+        """Test that show_startup_info runs without error."""
+        import config
+
+        config.show_startup_info()
+
+        captured = capsys.readouterr()
+        assert "SquidBot Configuration" in captured.out
+        assert "Home Directory" in captured.out
+        assert "Server Port" in captured.out
+
+    def test_show_startup_info_shows_paths(self, capsys):
+        """Test that show_startup_info shows all paths."""
+        import config
+
+        config.show_startup_info()
+
+        captured = capsys.readouterr()
+        assert "Character File" in captured.out
+        assert "Skills Dir" in captured.out
+        assert "Coding Dir" in captured.out
+        assert "Sessions Dir" in captured.out
+
+    def test_show_startup_info_shows_env_hint(self, capsys):
+        """Test that show_startup_info shows env var hints."""
+        import config
+
+        config.show_startup_info()
+
+        captured = capsys.readouterr()
+        assert "SQUIDBOT_HOME" in captured.out
+        assert "SQUID_PORT" in captured.out

@@ -56,6 +56,9 @@ HEARTBEAT_INTERVAL_MINUTES=30                 # Default: 30
 # Optional - Local server port
 SQUID_PORT=7777                               # Default: 7777
 
+# Optional - Home directory for all data
+SQUIDBOT_HOME=~/.squidbot                     # Default: ~/.squidbot
+
 # Optional - AI Character/Personality
 CHARACTER_NAME=Assistant                      # Bot's name
 CHARACTER_PERSONA=You are a helpful assistant # Personality description
@@ -316,7 +319,29 @@ Agent: [Uses code_write to create fibonacci.zig with tests]
 
 ## Data Storage
 
-All user data is stored in `~/.squidbot/`:
+All user data is stored in `~/.squidbot/` (or `$SQUIDBOT_HOME` if set).
+
+On first startup, SquidBot automatically creates:
+- Default `CHARACTER.md` with a helpful assistant personality
+- Default skills (`search/` and `reminder/`)
+- All required directories
+
+**Startup Info**: When the server starts, it displays configuration info:
+```
+============================================================
+  SquidBot Configuration
+============================================================
+  Home Directory : /Users/you/.squidbot
+  Server Port    : 7777
+  Model          : gpt-4o
+  Heartbeat      : 30 minutes
+------------------------------------------------------------
+  Character File : /Users/you/.squidbot/CHARACTER.md
+  Skills Dir     : /Users/you/.squidbot/skills
+  Coding Dir     : /Users/you/.squidbot/coding
+  Sessions Dir   : /Users/you/.squidbot/sessions
+============================================================
+```
 
 | File | Description |
 |------|-------------|

@@ -1,12 +1,32 @@
 .PHONY: all start stop stopall restart status logs client test testall integrationtest clean help \
-        install install-dev poetry-install poetry-install-dev package package-clean
+        install install-dev poetry-install poetry-install-dev package package-clean info
 
-# Default target - start the server
-all: start
+# Configuration (can be overridden via environment)
+SQUIDBOT_HOME ?= $(HOME)/.squidbot
+SQUID_PORT ?= 7777
+
+# Default target - show info and start the server
+all: info start
 
 # ============================================================
 # Server & Client
 # ============================================================
+
+# Show configuration info
+info:
+	@echo ""
+	@echo "============================================================"
+	@echo "  SquidBot Configuration"
+	@echo "============================================================"
+	@echo "  SQUIDBOT_HOME : $(SQUIDBOT_HOME)"
+	@echo "  SQUID_PORT    : $(SQUID_PORT)"
+	@echo "============================================================"
+	@echo ""
+	@echo "  To customize, set environment variables:"
+	@echo "    export SQUIDBOT_HOME=/path/to/home"
+	@echo "    export SQUID_PORT=8888"
+	@echo "============================================================"
+	@echo ""
 
 # Start the server (daemon mode)
 start:
@@ -189,7 +209,8 @@ help:
 	@echo "SquidBot - Autonomous AI Agent"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make              - Start the server (same as 'make start')"
+	@echo "  make              - Show config info and start the server"
+	@echo "  make info         - Show configuration (SQUIDBOT_HOME, SQUID_PORT)"
 	@echo "  make start        - Start the server as daemon"
 	@echo "  make stop         - Stop the server"
 	@echo "  make stopall      - Stop server and kill all clients"

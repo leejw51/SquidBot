@@ -95,7 +95,9 @@ async def get_embedding(text: str) -> list[float]:
     return response.data[0].embedding
 
 
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[dict]:
+def chunk_text(
+    text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP
+) -> list[dict]:
     """Split text into overlapping chunks for large documents.
 
     Returns list of dicts with 'text', 'start', 'end' positions.
@@ -122,11 +124,13 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
                     end = break_pos + len(sep)
                     break
 
-        chunks.append({
-            "text": text[start:end].strip(),
-            "start": start,
-            "end": end,
-        })
+        chunks.append(
+            {
+                "text": text[start:end].strip(),
+                "start": start,
+                "end": end,
+            }
+        )
 
         # Move start with overlap
         start = end - char_overlap if end < len(text) else end
@@ -149,7 +153,8 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
     vec_available = _load_vec_extension(conn)
 
     # Create memories table
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS memories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT NOT NULL,
@@ -158,10 +163,12 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
             created_at TEXT NOT NULL,
             metadata TEXT
         )
-    """)
+    """
+    )
 
     # Create chunks table for large documents
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS memory_chunks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             memory_id INTEGER NOT NULL,
@@ -172,27 +179,36 @@ def init_db_sync(db_path: Path = DB_PATH) -> bool:
             embedding BLOB,
             FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
         )
-    """)
+    """
+    )
 
     # Create indices
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_chunks_memory_id ON memory_chunks(memory_id)")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chunks_memory_id ON memory_chunks(memory_id)"
+    )
 
     # Create vec0 virtual table for fast KNN search if available
     if vec_available:
         try:
-            conn.execute(f"""
+            conn.execute(
+                f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS memory_vec USING vec0(
                     memory_id INTEGER PRIMARY KEY,
                     embedding float[{EMBEDDING_DIM}]
                 )
-            """)
-            conn.execute(f"""
+            """
+            )
+            conn.execute(
+                f"""
                 CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vec USING vec0(
                     chunk_id INTEGER PRIMARY KEY,
                     embedding float[{EMBEDDING_DIM}]
                 )
-            """)
+            """
+            )
             logger.info("Created vec0 virtual tables for fast KNN search")
         except Exception as e:
             logger.warning(f"Failed to create vec0 tables: {e}")
@@ -215,7 +231,8 @@ async def init_db():
         await db.execute("PRAGMA cache_size=-64000")
         await db.execute("PRAGMA busy_timeout=5000")
         # Create memories table
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT NOT NULL,
@@ -224,10 +241,12 @@ async def init_db():
                 created_at TEXT NOT NULL,
                 metadata TEXT
             )
-        """)
+        """
+        )
 
         # Create chunks table for large documents
-        await db.execute("""
+        await db.execute(
+            """
             CREATE TABLE IF NOT EXISTS memory_chunks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 memory_id INTEGER NOT NULL,
@@ -238,11 +257,16 @@ async def init_db():
                 embedding BLOB,
                 FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
             )
-        """)
+        """
+        )
 
         # Create indices
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category)")
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_chunks_memory_id ON memory_chunks(memory_id)")
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_chunks_memory_id ON memory_chunks(memory_id)"
+        )
 
         await db.commit()
 
@@ -471,28 +495,32 @@ async def search_memory_semantic(query: str, limit: int = 5) -> list[dict]:
                     seen_ids.add(row[0])
                     # L2 distance to cosine-like similarity
                     similarity = max(0, 1 - row[5] / 2)
-                    results.append({
-                        "id": row[0],
-                        "content": row[1],
-                        "category": row[2],
-                        "created_at": row[3],
-                        "metadata": json.loads(row[4]) if row[4] else None,
-                        "similarity": similarity,
-                    })
+                    results.append(
+                        {
+                            "id": row[0],
+                            "content": row[1],
+                            "category": row[2],
+                            "created_at": row[3],
+                            "metadata": json.loads(row[4]) if row[4] else None,
+                            "similarity": similarity,
+                        }
+                    )
 
             for row in chunk_rows:
                 if row[0] not in seen_ids:
                     seen_ids.add(row[0])
                     similarity = max(0, 1 - row[5] / 2)
-                    results.append({
-                        "id": row[0],
-                        "content": row[1],
-                        "category": row[2],
-                        "created_at": row[3],
-                        "metadata": json.loads(row[4]) if row[4] else None,
-                        "similarity": similarity,
-                        "chunk_index": row[6],
-                    })
+                    results.append(
+                        {
+                            "id": row[0],
+                            "content": row[1],
+                            "category": row[2],
+                            "created_at": row[3],
+                            "metadata": json.loads(row[4]) if row[4] else None,
+                            "similarity": similarity,
+                            "chunk_index": row[6],
+                        }
+                    )
 
             results.sort(key=lambda x: x["similarity"], reverse=True)
             return results[:limit]
@@ -504,7 +532,9 @@ async def search_memory_semantic(query: str, limit: int = 5) -> list[dict]:
     return await _search_memory_fallback(query_embedding, limit)
 
 
-async def _search_memory_fallback(query_embedding: list[float], limit: int) -> list[dict]:
+async def _search_memory_fallback(
+    query_embedding: list[float], limit: int
+) -> list[dict]:
     """Fallback semantic search using Python cosine similarity."""
     import numpy as np
 
@@ -536,14 +566,18 @@ async def _search_memory_fallback(query_embedding: list[float], limit: int) -> l
             else:
                 similarity = 0
 
-            results.append({
-                "id": row["id"],
-                "content": row["content"],
-                "category": row["category"],
-                "created_at": row["created_at"],
-                "metadata": json.loads(row["metadata"]) if row["metadata"] else None,
-                "similarity": similarity,
-            })
+            results.append(
+                {
+                    "id": row["id"],
+                    "content": row["content"],
+                    "category": row["category"],
+                    "created_at": row["created_at"],
+                    "metadata": (
+                        json.loads(row["metadata"]) if row["metadata"] else None
+                    ),
+                    "similarity": similarity,
+                }
+            )
 
     results.sort(key=lambda x: x["similarity"], reverse=True)
     return results[:limit]
@@ -640,7 +674,9 @@ async def get_memory_stats() -> dict:
         total_chunks = (await cursor.fetchone())[0]
 
         # Count with embeddings
-        cursor = await db.execute("SELECT COUNT(*) FROM memories WHERE embedding IS NOT NULL")
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM memories WHERE embedding IS NOT NULL"
+        )
         with_embeddings = (await cursor.fetchone())[0]
 
     # Check vec0 status

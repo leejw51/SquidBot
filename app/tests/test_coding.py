@@ -6,18 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from tools.coding import (
-    CodeDeleteTool,
-    CodeListTool,
-    CodeReadTool,
-    CodeRunTool,
-    CodeWriteTool,
-    PythonTestTool,
-    ZigBuildTool,
-    ZigTestTool,
-    get_coding_tools,
-    get_workspace,
-)
+from tools.coding import (CodeDeleteTool, CodeListTool, CodeReadTool,
+                          CodeRunTool, CodeWriteTool, PythonTestTool,
+                          ZigBuildTool, ZigTestTool, get_coding_tools,
+                          get_workspace)
 
 
 @pytest.fixture
@@ -412,7 +404,9 @@ class TestCodeWriteEdgeCases:
 
     async def test_reject_shell_extension(self, tool, temp_workspace):
         """Test rejection of shell scripts."""
-        result = await tool.execute(project="test", filename="script.sh", code="echo hi")
+        result = await tool.execute(
+            project="test", filename="script.sh", code="echo hi"
+        )
         assert "Error" in result
         assert "Unsupported" in result
 
@@ -706,7 +700,11 @@ def test_will_fail():
 
         result = await tool.execute(project="project")
         # pytest should report no tests
-        assert "no tests" in result.lower() or "0 passed" in result.lower() or "collected 0" in result.lower()
+        assert (
+            "no tests" in result.lower()
+            or "0 passed" in result.lower()
+            or "collected 0" in result.lower()
+        )
 
 
 # =============================================================================
@@ -800,9 +798,7 @@ print(f"Sum: {add(10, 20)}")
         assert "Hello, World!" in run_result
         assert "Sum: 30" in run_result
 
-    async def test_write_test_workflow(
-        self, write_tool, test_tool, temp_workspace
-    ):
+    async def test_write_test_workflow(self, write_tool, test_tool, temp_workspace):
         """Test writing code and tests, then running tests."""
         # Write module
         await write_tool.execute(
@@ -1005,9 +1001,7 @@ pub fn main() void {
         )
         assert "Zig integration test!" in run_result
 
-    async def test_zig_with_tests(
-        self, write_tool, test_tool, temp_workspace
-    ):
+    async def test_zig_with_tests(self, write_tool, test_tool, temp_workspace):
         """Test writing Zig code with tests."""
         code = """
 const std = @import("std");
@@ -1035,19 +1029,13 @@ pub fn main() void {
     std.debug.print("Result: {}\\n", .{add(10, 20)});
 }
 """
-        await write_tool.execute(
-            project="zig_tested", filename="math.zig", code=code
-        )
+        await write_tool.execute(project="zig_tested", filename="math.zig", code=code)
 
         # Run tests
-        test_result = await test_tool.execute(
-            project="zig_tested", filename="math.zig"
-        )
+        test_result = await test_tool.execute(project="zig_tested", filename="math.zig")
         assert "passed" in test_result.lower() or "All tests passed" in test_result
 
-    async def test_zig_build_workflow(
-        self, write_tool, build_tool, temp_workspace
-    ):
+    async def test_zig_build_workflow(self, write_tool, build_tool, temp_workspace):
         """Test Zig build workflow."""
         code = """
 const std = @import("std");
@@ -1056,14 +1044,10 @@ pub fn main() void {
     std.debug.print("Built successfully!\\n", .{});
 }
 """
-        await write_tool.execute(
-            project="zig_build", filename="app.zig", code=code
-        )
+        await write_tool.execute(project="zig_build", filename="app.zig", code=code)
 
         # Build
-        build_result = await build_tool.execute(
-            project="zig_build", filename="app.zig"
-        )
+        build_result = await build_tool.execute(project="zig_build", filename="app.zig")
         assert "successful" in build_result.lower() or "Build" in build_result
 
     async def test_zig_algorithm_implementation(
@@ -1153,9 +1137,7 @@ class TestCrossLanguageIntegration:
     def delete_tool(self):
         return CodeDeleteTool()
 
-    async def test_mixed_language_project(
-        self, write_tool, list_tool, temp_workspace
-    ):
+    async def test_mixed_language_project(self, write_tool, list_tool, temp_workspace):
         """Test project with both Zig and Python files."""
         # Write Python
         await write_tool.execute(
@@ -1197,7 +1179,7 @@ pub fn main() void {
         await write_tool.execute(
             project="zig_project",
             filename="main.zig",
-            code="const std = @import(\"std\"); pub fn main() void {}",
+            code='const std = @import("std"); pub fn main() void {}',
         )
 
         # List all projects

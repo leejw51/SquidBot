@@ -133,7 +133,9 @@ class SessionEntry:
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "last_lane": str(self.last_lane),
-            "delivery_context": self.delivery_context.to_dict() if self.delivery_context else None,
+            "delivery_context": (
+                self.delivery_context.to_dict() if self.delivery_context else None
+            ),
             "metadata": self.metadata,
             "message_count": self.message_count,
             "display_name": self.display_name,
@@ -151,7 +153,9 @@ class SessionEntry:
             created_at=data.get("created_at", time.time()),
             updated_at=data.get("updated_at", time.time()),
             last_lane=CommandLane(data.get("last_lane", "main")),
-            delivery_context=DeliveryContext.from_dict(delivery_ctx) if delivery_ctx else None,
+            delivery_context=(
+                DeliveryContext.from_dict(delivery_ctx) if delivery_ctx else None
+            ),
             metadata=data.get("metadata", {}),
             message_count=data.get("message_count", 0),
             display_name=data.get("display_name"),
@@ -234,29 +238,39 @@ class SessionTranscript:
         """Append a user message."""
         self.append_message("user", content, "message", metadata)
 
-    def append_assistant_message(self, content: str, metadata: dict | None = None) -> None:
+    def append_assistant_message(
+        self, content: str, metadata: dict | None = None
+    ) -> None:
         """Append an assistant message."""
         self.append_message("assistant", content, "message", metadata)
 
-    def append_tool_call(self, tool_name: str, tool_input: dict, metadata: dict | None = None) -> None:
+    def append_tool_call(
+        self, tool_name: str, tool_input: dict, metadata: dict | None = None
+    ) -> None:
         """Append a tool call."""
-        self._append_line({
-            "type": "tool_call",
-            "tool": tool_name,
-            "input": tool_input,
-            "timestamp": datetime.now().isoformat(),
-            "metadata": metadata or {},
-        })
+        self._append_line(
+            {
+                "type": "tool_call",
+                "tool": tool_name,
+                "input": tool_input,
+                "timestamp": datetime.now().isoformat(),
+                "metadata": metadata or {},
+            }
+        )
 
-    def append_tool_result(self, tool_name: str, result: str, metadata: dict | None = None) -> None:
+    def append_tool_result(
+        self, tool_name: str, result: str, metadata: dict | None = None
+    ) -> None:
         """Append a tool result."""
-        self._append_line({
-            "type": "tool_result",
-            "tool": tool_name,
-            "result": result,
-            "timestamp": datetime.now().isoformat(),
-            "metadata": metadata or {},
-        })
+        self._append_line(
+            {
+                "type": "tool_result",
+                "tool": tool_name,
+                "result": result,
+                "timestamp": datetime.now().isoformat(),
+                "metadata": metadata or {},
+            }
+        )
 
     def read_messages(self) -> Iterator[dict]:
         """Read all messages from transcript (excluding header)."""
@@ -280,10 +294,12 @@ class SessionTranscript:
         messages = []
         for msg in self.read_messages():
             if msg.get("type") == "message":
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"],
-                })
+                messages.append(
+                    {
+                        "role": msg["role"],
+                        "content": msg["content"],
+                    }
+                )
         if limit:
             messages = messages[-limit:]
         return messages

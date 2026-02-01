@@ -7,14 +7,8 @@ from pathlib import Path
 import pytest
 
 from lanes import LANE_CRON, LANE_MAIN, CommandLane
-from session import (
-    ChannelType,
-    DeliveryContext,
-    Session,
-    SessionEntry,
-    SessionManager,
-    SessionTranscript,
-)
+from session import (ChannelType, DeliveryContext, Session, SessionEntry,
+                     SessionManager, SessionTranscript)
 
 
 class TestCommandLane:
