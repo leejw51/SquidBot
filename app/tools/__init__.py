@@ -4,6 +4,7 @@ from tools.base import Tool
 from tools.browser import (BrowserClickTool, BrowserGetTextTool,
                            BrowserNavigateTool, BrowserScreenshotTool,
                            BrowserSnapshotTool, BrowserTypeTool)
+from tools.coding import get_coding_tools
 from tools.cron import (CronClearTool, CronCreateTool, CronDeleteTool,
                         CronListTool)
 from tools.memory_tool import (MemoryAddTool, MemoryDeleteTool, MemoryListTool,
@@ -31,6 +32,8 @@ ALL_TOOLS: list[Tool] = [
     CronListTool(),
     CronDeleteTool(),
     CronClearTool(),
+    # Coding (Zig + Python)
+    *get_coding_tools(),
 ]
 
 

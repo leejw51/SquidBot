@@ -81,6 +81,15 @@ test-chaining:
 test-proactive:
 	pytest tests/test_proactive_messaging.py -v
 
+test-coding:
+	pytest tests/test_coding.py -v
+
+test-session:
+	pytest tests/test_session.py -v
+
+test-sqlite-vec:
+	pytest tests/test_sqlite_vec.py -v
+
 # ============================================================
 # Installation
 # ============================================================

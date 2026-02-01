@@ -15,6 +15,7 @@ An autonomous AI agent with Telegram integration, persistent memory, web search,
 - **Web Search** - Search the web for current information
 - **Browser Automation** - Browse and interact with websites via Playwright
 - **Scheduled Tasks** - Set reminders and recurring tasks with cron expressions
+- **Coding Agent** - Write, run, and test Zig and Python code in isolated workspace
 - **Custom Skills** - Extend agent behavior with markdown skill files
 - **Custom Character** - Define AI personality and communication style
 
@@ -164,6 +165,62 @@ You are a helpful AI assistant with the following traits:
 | `cron_create` | Create scheduled tasks |
 | `cron_list` | List scheduled tasks |
 | `cron_delete` | Delete a scheduled task |
+| `code_write` | Write Zig or Python code to workspace |
+| `code_read` | Read code from workspace |
+| `code_run` | Execute Zig or Python files |
+| `code_list` | List projects and files |
+| `code_delete` | Delete files or projects |
+| `zig_build` | Build Zig projects (with release option) |
+| `zig_test` | Run Zig tests |
+| `python_test` | Run Python tests with pytest |
+
+## Coding Agent
+
+The coding agent allows the AI to write, run, and test code in an isolated workspace. It supports **Zig** and **Python**.
+
+### Workspace Structure
+
+```
+~/.squidbot/coding/
+├── my_project/
+│   ├── main.py
+│   ├── utils.py
+│   └── test_main.py
+├── zig_project/
+│   ├── main.zig
+│   └── build.zig
+└── algorithms/
+    └── sort.zig
+```
+
+### Supported Languages
+
+| Language | Extensions | Features |
+|----------|------------|----------|
+| **Python** | `.py` | Run scripts, pytest integration, multi-file imports |
+| **Zig** | `.zig` | Compile & run, build with release optimization, built-in test runner |
+
+### Example Usage
+
+```
+User: Write a Python function to calculate fibonacci numbers and test it
+
+Agent: [Uses code_write to create fibonacci.py]
+       [Uses code_write to create test_fibonacci.py]
+       [Uses python_test to run the tests]
+       All 3 tests passed!
+
+User: Now write the same in Zig
+
+Agent: [Uses code_write to create fibonacci.zig with tests]
+       [Uses zig_test to run the tests]
+       All tests passed!
+```
+
+### Requirements
+
+- **Python**: Uses the same Python interpreter as SquidBot
+- **Zig**: Optional - install from [ziglang.org](https://ziglang.org/download/) for Zig support
 
 ## Makefile Commands
 
@@ -203,6 +260,9 @@ You are a helpful AI assistant with the following traits:
 | `make test-tools` | Run tool tests only |
 | `make test-chaining` | Run tool chaining tests |
 | `make test-proactive` | Run proactive messaging tests |
+| `make test-coding` | Run coding agent tests (Zig/Python) |
+| `make test-session` | Run session management tests |
+| `make test-sqlite-vec` | Run vector search tests |
 
 ### Packaging
 
@@ -230,28 +290,28 @@ You are a helpful AI assistant with the following traits:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      SquidBot Server                        │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  Telegram   │  │   HTTP API  │  │    Scheduler        │  │
-│  │    Bot      │  │   (client)  │  │  (cron/heartbeat)   │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-│         │                │                    │             │
-│         └────────────────┼────────────────────┘             │
-│                          ▼                                  │
-│                    ┌───────────┐                            │
-│                    │   Agent   │ ◄── Skills + Character     │
-│                    │  (GPT-4o) │                            │
-│                    └─────┬─────┘                            │
-│                          │                                  │
-│         ┌────────────────┼────────────────┐                 │
-│         ▼                ▼                ▼                 │
-│  ┌────────────┐  ┌────────────┐  ┌────────────────┐        │
-│  │   Memory   │  │ Web Search │  │    Browser     │        │
-│  │  (SQLite)  │  │            │  │  (Playwright)  │        │
-│  └────────────┘  └────────────┘  └────────────────┘        │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                         SquidBot Server                             │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐          │
+│  │  Telegram   │  │   TCP/HTTP  │  │    Scheduler        │          │
+│  │    Bot      │  │   Clients   │  │  (cron/heartbeat)   │          │
+│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘          │
+│         │                │                    │                     │
+│         └────────────────┼────────────────────┘                     │
+│                          ▼                                          │
+│                    ┌───────────┐                                    │
+│                    │   Agent   │ ◄── Skills + Character             │
+│                    │  (GPT-4o) │                                    │
+│                    └─────┬─────┘                                    │
+│                          │                                          │
+│    ┌──────────┬──────────┼──────────┬──────────┐                   │
+│    ▼          ▼          ▼          ▼          ▼                   │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────────┐ │
+│ │ Memory │ │  Web   │ │Browser │ │  Cron  │ │   Coding Agent     │ │
+│ │(SQLite)│ │ Search │ │  Auto  │ │  Jobs  │ │   (Zig/Python)     │ │
+│ └────────┘ └────────┘ └────────┘ └────────┘ └────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Storage
@@ -260,10 +320,12 @@ All user data is stored in `~/.squidbot/`:
 
 | File | Description |
 |------|-------------|
-| `memory.db` | SQLite database with vector embeddings |
+| `memory.db` | SQLite database with vector embeddings (WAL mode) |
 | `cron_jobs.json` | Scheduled tasks |
 | `CHARACTER.md` | AI character definition |
 | `skills/` | Custom skill definitions |
+| `coding/` | Coding agent workspace (Zig & Python projects) |
+| `sessions/` | Session transcripts (JSONL format) |
 
 ## License
 
