@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Integration test for cron jobs using actual OpenAI agent."""
+
 import asyncio
 import sys
 

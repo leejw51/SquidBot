@@ -4,6 +4,7 @@ SquidBot Daemon Manager
 
 Process supervisor for running SquidBot server and managing clients.
 """
+
 import os
 import signal
 import subprocess
@@ -67,6 +68,35 @@ def find_squidbot_processes() -> list[tuple[int, str]]:
     return processes
 
 
+def show_env_info():
+    """Display environment configuration to console."""
+    import os
+
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    squid_port = int(os.environ.get("SQUID_PORT", "7777"))
+    openai_model = os.environ.get("OPENAI_MODEL", "gpt-4o")
+    heartbeat = int(os.environ.get("HEARTBEAT_INTERVAL_MINUTES", "30"))
+    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    openai_key = os.environ.get("OPENAI_API_KEY", "")
+
+    print("")
+    print("=" * 60)
+    print("  SquidBot Configuration")
+    print("=" * 60)
+    print(f"  Home Directory : {DATA_DIR}")
+    print(f"  Server Port    : 127.0.0.1:{squid_port}")
+    print(f"  Model          : {openai_model}")
+    print(f"  Heartbeat      : {heartbeat} minutes")
+    print("-" * 60)
+    print(f"  OPENAI_API_KEY : {'[SET]' if openai_key else '[NOT SET]'}")
+    print(f"  Telegram Bot   : {'[ENABLED]' if telegram_token else '[DISABLED]'}")
+    print("=" * 60)
+    print("")
+
+
 def start():
     """Start the server."""
     if is_running():
@@ -77,6 +107,9 @@ def start():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     main_script = SCRIPT_DIR / "server.py"
+
+    # Show environment info to console
+    show_env_info()
 
     print(f"Starting SquidBot server...")
     print(f"Log file: {LOG_FILE}")

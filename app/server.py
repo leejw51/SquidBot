@@ -5,6 +5,7 @@ SquidBot Server
 Runs the Telegram bot (optional) and exposes a local TCP port for client connections.
 Supports multiple channels via the session/lane abstraction.
 """
+
 import asyncio
 import json
 import logging
@@ -428,14 +429,45 @@ async def async_main():
         logger.info("SquidBot server stopped")
 
 
-def main():
-    """Main entry point."""
+def run_server():
+    """Run the server directly."""
     # Show configuration and initialize defaults
     show_startup_info()
     init_default_files()
 
     logger.info("Starting SquidBot server...")
     asyncio.run(async_main())
+
+
+def main():
+    """Main entry point with CLI support."""
+    import sys
+
+    if len(sys.argv) < 2:
+        # No arguments - run server directly
+        run_server()
+        return
+
+    command = sys.argv[1]
+
+    if command in ("start", "stop", "stopall", "restart", "status", "logs"):
+        # Delegate to daemon module
+        from daemon import main as daemon_main
+
+        daemon_main()
+    else:
+        # Unknown command - show help
+        print("Usage: squidbot [command]")
+        print("")
+        print("Commands:")
+        print("  (none)   Run server in foreground")
+        print("  start    Start server as daemon")
+        print("  stop     Stop the daemon")
+        print("  stopall  Stop daemon and all clients")
+        print("  restart  Restart the daemon")
+        print("  status   Show daemon status")
+        print("  logs     Show logs (use -f to follow)")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

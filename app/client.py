@@ -5,6 +5,7 @@ SquidBot Client
 Terminal-based chat client that connects to the local SquidBot server.
 Features: async operations, input history, loading animation, notifications.
 """
+
 import asyncio
 import json
 import readline

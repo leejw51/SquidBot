@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verification script for cron job operations."""
+
 import asyncio
 import sys
 

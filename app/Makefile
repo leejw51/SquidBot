@@ -5,8 +5,8 @@
 SQUIDBOT_HOME ?= $(HOME)/.squidbot
 SQUID_PORT ?= 7777
 
-# Default target - show info and start the server
-all: info start
+# Default target - start the server (shows config automatically)
+all: start
 
 # ============================================================
 # Server & Client
@@ -166,6 +166,7 @@ package:
 		--hidden-import=tiktoken_ext \
 		--hidden-import=aiosqlite \
 		--hidden-import=numpy \
+		--hidden-import=daemon \
 		--collect-data duckduckgo_search \
 		--add-data "skills_template:skills_template" \
 		server.py
@@ -179,6 +180,7 @@ package-debug:
 		--hidden-import=tiktoken_ext \
 		--hidden-import=aiosqlite \
 		--hidden-import=numpy \
+		--hidden-import=daemon \
 		--collect-data duckduckgo_search \
 		--add-data "skills_template:skills_template" \
 		server.py
