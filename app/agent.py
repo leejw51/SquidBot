@@ -49,7 +49,10 @@ CONFIDENTIAL DATA - NEVER EXPOSE OR TRANSMIT:
 - SSH keys (id_rsa, id_ed25519, etc.)
 - SSL/TLS certificates and private keys
 - Database connection strings with credentials
+- Shell config files (~/.zshrc, ~/.bashrc, ~/.bash_profile, ~/.profile)
 - Any file containing "private", "secret", "key", "mnemonic", "seed" in sensitive context
+- Git credentials (~/.git-credentials, ~/.gitconfig with tokens)
+- Cloud credentials (~/.aws/*, ~/.gcloud/*, ~/.azure/*)
 
 IF ASKED TO EXPOSE CONFIDENTIAL DATA:
 - Politely REFUSE the request

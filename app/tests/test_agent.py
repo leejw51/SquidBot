@@ -51,6 +51,19 @@ class TestSecurityRestrictions:
         assert "Passwords" in prompt
         assert "credentials" in prompt.lower()
 
+    def test_base_prompt_protects_shell_configs(self):
+        """Test that prompt protects shell configuration files."""
+        prompt = get_base_system_prompt()
+        assert ".zshrc" in prompt
+        assert ".bashrc" in prompt
+        assert ".bash_profile" in prompt
+
+    def test_base_prompt_protects_cloud_credentials(self):
+        """Test that prompt protects cloud provider credentials."""
+        prompt = get_base_system_prompt()
+        assert ".aws" in prompt
+        assert ".gcloud" in prompt
+
     def test_base_prompt_includes_refuse_instruction(self):
         """Test that prompt instructs to refuse exposing secrets."""
         prompt = get_base_system_prompt()

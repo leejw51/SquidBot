@@ -112,9 +112,9 @@ class SquidBotClient:
         self.running = True
         self.history = InputHistory(HISTORY_FILE)
         self.spinner = Spinner("Thinking")
-        self.waiting_for_response = False
         self.pending_notifications: list[str] = []
-        self.listener_task: asyncio.Task | None = None
+        self.response_queue: asyncio.Queue = asyncio.Queue()
+        self.reader_task: asyncio.Task | None = None
 
     async def connect(self) -> bool:
         """Connect to the server."""
@@ -142,79 +142,64 @@ class SquidBotClient:
         self.writer.write(data.encode())
         await self.writer.drain()
 
-    async def read_response(self) -> dict | None:
-        """Read a response from the server."""
-        if not self.reader:
-            return None
-
-        try:
-            data = await self.reader.readline()
-            if not data:
-                return None
-            return json.loads(data.decode().strip())
-        except Exception:
-            return None
-
-    async def listen_for_notifications(self):
-        """Background task to listen for server notifications."""
+    async def read_responses(self):
+        """Single reader task that dispatches responses to the right handler."""
         while self.running and self.reader:
             try:
-                # Only listen when not waiting for a direct response
-                if self.waiting_for_response:
-                    await asyncio.sleep(0.1)
-                    continue
-
-                # Check if data is available (non-blocking)
-                try:
-                    data = await asyncio.wait_for(self.reader.readline(), timeout=0.5)
-                except asyncio.TimeoutError:
-                    continue
-
+                data = await self.reader.readline()
                 if not data:
+                    # Connection closed
+                    await self.response_queue.put(None)
                     break
 
                 response = json.loads(data.decode().strip())
+
                 if response.get("status") == "notification":
+                    # Handle notification immediately
                     msg = response.get("response", "")
-                    # Print notification immediately
                     print(f"\n\n📢 [Scheduled Task]\n{msg}\n")
                     print("You: ", end="", flush=True)
+                else:
+                    # Queue response for chat handler
+                    await self.response_queue.put(response)
 
             except asyncio.CancelledError:
                 break
+            except json.JSONDecodeError:
+                continue
             except Exception:
-                await asyncio.sleep(0.5)
+                await self.response_queue.put(None)
+                break
+
+    async def get_response(self, timeout: float = 120.0) -> dict | None:
+        """Get a response from the queue with timeout."""
+        try:
+            return await asyncio.wait_for(self.response_queue.get(), timeout=timeout)
+        except asyncio.TimeoutError:
+            return None
 
     async def chat(self, user_input: str) -> tuple[str | None, float]:
         """Send chat message with loading animation."""
         await self.spinner.start()
-        self.waiting_for_response = True
 
         try:
             await self.send_request(user_input, "chat")
 
-            # Wait for response
-            while True:
-                response = await self.read_response()
-                if response is None:
-                    return None, self.spinner.elapsed
+            # Wait for response from queue
+            response = await self.get_response(timeout=120.0)
+            if response is None:
+                return None, self.spinner.elapsed
 
-                # Skip notifications, wait for our response
-                if response.get("status") == "notification":
-                    self.pending_notifications.append(response.get("response", ""))
-                    continue
-
-                return response.get("response", ""), self.spinner.elapsed
+            return response.get("response", ""), self.spinner.elapsed
         finally:
-            self.waiting_for_response = False
             await self.spinner.stop()
 
     async def close(self):
         """Close the connection."""
-        if self.listener_task:
-            self.listener_task.cancel()
+        if self.reader_task:
+            self.reader_task.cancel()
             try:
-                await self.listener_task
+                await self.reader_task
             except asyncio.CancelledError:
                 pass
 
@@ -237,18 +222,18 @@ class SquidBotClient:
         if not await self.connect():
             return
 
+        # Start the single reader task
+        self.reader_task = asyncio.create_task(self.read_responses())
+
         # Verify connection
         await self.send_request("", "ping")
-        response = await self.read_response()
+        response = await self.get_response(timeout=5.0)
         if not response or response.get("response") != "pong":
             print("Error: Server not responding correctly")
             return
 
         # Setup history
         await self.history.setup()
-
-        # Start notification listener
-        self.listener_task = asyncio.create_task(self.listen_for_notifications())
 
         print(f"Connected to SquidBot at {SERVER_HOST}:{SERVER_PORT}")
         print()
@@ -264,11 +249,6 @@ class SquidBotClient:
 
         while self.running:
             try:
-                # Show any pending notifications
-                for notif in self.pending_notifications:
-                    print(f"\n📢 [Scheduled Task]\n{notif}")
-                self.pending_notifications.clear()
-
                 # Get user input
                 user_input = await self.get_input("\nYou: ")
 
@@ -282,10 +262,8 @@ class SquidBotClient:
                     break
 
                 if cmd == "/clear":
-                    self.waiting_for_response = True
                     await self.send_request("", "clear")
-                    response = await self.read_response()
-                    self.waiting_for_response = False
+                    response = await self.get_response(timeout=5.0)
                     if response:
                         print(f"\n{response.get('response', '')}")
                     continue
