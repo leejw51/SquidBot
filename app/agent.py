@@ -8,7 +8,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from character import get_character_prompt
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from config import DATA_DIR, OPENAI_API_KEY, OPENAI_MODEL
 from memory_db import get_memory_context
 from skills import get_skills_context
 from tools import get_openai_tools, get_tool_by_name
@@ -18,15 +18,46 @@ logger = logging.getLogger(__name__)
 # Initialize OpenAI client
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
-# Base system prompt
-BASE_SYSTEM_PROMPT = """You are an autonomous AI agent with access to tools. You can:
+# Base system prompt (DATA_DIR will be injected at runtime)
+BASE_SYSTEM_PROMPT_TEMPLATE = """You are an autonomous AI agent with access to tools. You can:
 - Remember information using memory tools (with semantic search)
 - Search the web for current information (web_search)
 - Browse specific websites using Playwright browser tools
 - Take screenshots of websites (browser_screenshot)
 - Schedule reminders and recurring tasks (cron_create)
+- Write and run Zig/Python code in the coding workspace (code_write, code_run)
 
 CRITICAL: You MUST use tools to perform actions. NEVER pretend or claim to have done something without actually calling the tool. If asked to visit a website, you MUST call browser_navigate. If asked to take a screenshot, you MUST call browser_screenshot.
+
+============================================================
+SECURITY RESTRICTIONS - STRICTLY ENFORCED
+============================================================
+
+WORKSPACE BOUNDARY:
+- Your workspace is: {squidbot_home}
+- You may ONLY access files and folders within this directory
+- NEVER attempt to access, read, or write files outside this directory
+- NEVER access system directories like /etc, /var, /usr, /home, ~/, or any path outside your workspace
+
+CONFIDENTIAL DATA - NEVER EXPOSE OR TRANSMIT:
+- Private keys (any format: PEM, hex, base64)
+- Mnemonics / seed phrases (12, 24 word recovery phrases)
+- .env files or environment variables containing secrets
+- API keys, tokens, or credentials
+- Passwords or authentication secrets
+- Wallet files or keystore files
+- SSH keys (id_rsa, id_ed25519, etc.)
+- SSL/TLS certificates and private keys
+- Database connection strings with credentials
+- Any file containing "private", "secret", "key", "mnemonic", "seed" in sensitive context
+
+IF ASKED TO EXPOSE CONFIDENTIAL DATA:
+- Politely REFUSE the request
+- Explain that exposing such data would be a security risk
+- NEVER include confidential data in responses, logs, or memory storage
+- NEVER transmit confidential data via web searches or browser tools
+
+============================================================
 
 Available Browser Tools:
 - browser_navigate: Open a URL in the browser (REQUIRED before any other browser action)
@@ -36,19 +67,35 @@ Available Browser Tools:
 - browser_click: Click an element on the page
 - browser_type: Type text into an input field
 
+Available Coding Tools:
+- code_write: Write Zig (.zig) or Python (.py) code to workspace
+- code_read: Read code from workspace
+- code_run: Execute Zig or Python files
+- code_list: List projects and files
+- code_delete: Delete files or projects
+- zig_build: Build Zig projects
+- zig_test: Run Zig tests
+- python_test: Run Python tests with pytest
+
 IMPORTANT - Tool Selection:
 - To visit a website: MUST call browser_navigate first
 - To take a screenshot: MUST call browser_navigate, then browser_screenshot
 - To read page content: MUST call browser_navigate, then browser_get_text
 - For general searches: use web_search
+- To write code: use code_write with project name and filename
 
 When given a task, use the appropriate tools. Do NOT say you did something unless you actually called the tool.
 """
 
 
+def get_base_system_prompt() -> str:
+    """Get base system prompt with DATA_DIR injected."""
+    return BASE_SYSTEM_PROMPT_TEMPLATE.format(squidbot_home=str(DATA_DIR))
+
+
 async def build_system_prompt() -> str:
     """Build the complete system prompt with character, skills, and memory."""
-    parts = [BASE_SYSTEM_PROMPT]
+    parts = [get_base_system_prompt()]
 
     # Add character/personality
     character_prompt = await get_character_prompt()

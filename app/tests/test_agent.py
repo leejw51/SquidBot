@@ -4,7 +4,58 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent import build_system_prompt, execute_tool, run_agent_with_history
+from agent import (build_system_prompt, execute_tool, get_base_system_prompt,
+                   run_agent_with_history)
+
+
+class TestSecurityRestrictions:
+    """Test security restrictions in system prompt."""
+
+    def test_base_prompt_includes_squidbot_home(self):
+        """Test that base prompt includes SQUIDBOT_HOME path."""
+        prompt = get_base_system_prompt()
+        assert ".squidbot" in prompt or "SQUIDBOT" in prompt
+
+    def test_base_prompt_includes_security_section(self):
+        """Test that base prompt includes security restrictions."""
+        prompt = get_base_system_prompt()
+        assert "SECURITY RESTRICTIONS" in prompt
+
+    def test_base_prompt_restricts_workspace(self):
+        """Test that prompt restricts access to workspace only."""
+        prompt = get_base_system_prompt()
+        assert "WORKSPACE BOUNDARY" in prompt
+        assert "ONLY access files" in prompt
+
+    def test_base_prompt_protects_private_keys(self):
+        """Test that prompt protects private keys."""
+        prompt = get_base_system_prompt()
+        assert "Private keys" in prompt
+        assert "NEVER EXPOSE" in prompt
+
+    def test_base_prompt_protects_mnemonics(self):
+        """Test that prompt protects mnemonics/seed phrases."""
+        prompt = get_base_system_prompt()
+        assert "Mnemonics" in prompt or "mnemonic" in prompt
+        assert "seed phrase" in prompt.lower()
+
+    def test_base_prompt_protects_env_files(self):
+        """Test that prompt protects .env files."""
+        prompt = get_base_system_prompt()
+        assert ".env" in prompt
+
+    def test_base_prompt_protects_credentials(self):
+        """Test that prompt protects various credentials."""
+        prompt = get_base_system_prompt()
+        assert "API keys" in prompt
+        assert "Passwords" in prompt
+        assert "credentials" in prompt.lower()
+
+    def test_base_prompt_includes_refuse_instruction(self):
+        """Test that prompt instructs to refuse exposing secrets."""
+        prompt = get_base_system_prompt()
+        assert "REFUSE" in prompt
+        assert "security risk" in prompt.lower()
 
 
 class TestBuildSystemPrompt:
@@ -28,6 +79,26 @@ class TestBuildSystemPrompt:
 
             assert "autonomous AI agent" in prompt
             assert "tools" in prompt.lower()
+
+    @pytest.mark.asyncio
+    async def test_build_prompt_includes_security(self):
+        """Test that built prompt includes security restrictions."""
+        with patch(
+            "agent.get_character_prompt", new_callable=AsyncMock
+        ) as mock_char, patch(
+            "agent.get_skills_context", new_callable=AsyncMock
+        ) as mock_skills, patch(
+            "agent.get_memory_context", new_callable=AsyncMock
+        ) as mock_memory:
+            mock_char.return_value = ""
+            mock_skills.return_value = ""
+            mock_memory.return_value = ""
+
+            prompt = await build_system_prompt()
+
+            assert "SECURITY RESTRICTIONS" in prompt
+            assert "Private keys" in prompt
+            assert "NEVER EXPOSE" in prompt
 
     @pytest.mark.asyncio
     async def test_build_prompt_with_character(self):
