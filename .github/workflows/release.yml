@@ -90,13 +90,20 @@ jobs:
           body: |
             ## Installation
 
+            ### Prerequisites
+            Install Playwright browsers (required for web browsing):
+            ```bash
+            pip install playwright
+            playwright install chromium
+            ```
+
             ### macOS (Apple Silicon)
             ```bash
             # Download and extract
             tar -xzf squidbot-macos-arm64.tar.gz
 
             # Remove quarantine attribute (required for downloaded binaries)
-            xattr -cr squidbot/
+            find squidbot -exec xattr -c {} \;
 
             # Run
             ./squidbot/squidbot start
