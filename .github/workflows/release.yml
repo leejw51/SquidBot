@@ -1,12 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g., 1.0.0)'
-        required: true
-        type: string
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -24,37 +21,21 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Create release zip
         working-directory: ./app
-        run: python release.py -v ${{ inputs.version }}
+        run: python release.py -v ${{ steps.version.outputs.VERSION }}
 
       - name: List built files
         run: ls -la app/dist/
 
-      - name: Create Release
+      - name: Upload to Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v${{ inputs.version }}" \
-            --title "v${{ inputs.version }}" \
-            --generate-notes \
-            --notes "## Installation
-
-          ### Prerequisites
-          - Python 3.12+
-
-          ### Download & Run
-          \`\`\`bash
-          # Download and extract
-          unzip SquidBot-${{ inputs.version }}.zip
-
-          # Install dependencies
-          cd app
-          pip install -r requirements.txt
-          playwright install chromium
-
-          # Run
-          python daemon.py start
-          \`\`\`
-          " \
-            app/dist/SquidBot-${{ inputs.version }}.zip
+          gh release upload "v${{ steps.version.outputs.VERSION }}" \
+            app/dist/SquidBot-${{ steps.version.outputs.VERSION }}.zip \
+            --clobber
