@@ -173,7 +173,7 @@ poetry-client:
 
 # Build standalone binary with PyInstaller (--onedir for faster startup, no decompression)
 package:
-	pyinstaller --onedir --name squidbot \
+	pyinstaller --onedir --noconfirm --name squidbot \
 		--hidden-import=tiktoken_ext.openai_public \
 		--hidden-import=tiktoken_ext \
 		--hidden-import=aiosqlite \
@@ -202,7 +202,7 @@ package:
 
 # Build with console visible (for debugging)
 package-debug:
-	pyinstaller --onedir --name squidbot-debug \
+	pyinstaller --onedir --noconfirm --name squidbot-debug \
 		--console \
 		--hidden-import=tiktoken_ext.openai_public \
 		--hidden-import=tiktoken_ext \
