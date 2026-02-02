@@ -17,6 +17,7 @@ def should_exclude(path: Path, base_path: Path) -> bool:
 
     # Exclude patterns
     exclude_patterns = [
+        # Cache and build
         "__pycache__",
         ".pytest_cache",
         ".git",
@@ -24,24 +25,39 @@ def should_exclude(path: Path, base_path: Path) -> bool:
         "*.pyc",
         "*.pyo",
         "*.egg-info",
-        ".env",
         ".coverage",
         "htmlcov",
         "dist",
         "build",
         "*.spec",
         ".claude",
+        # Config
+        ".env",
         "poetry.lock",
+        # Testing
+        "tests",
+        "test_*",
+        "pytest.ini",
+        "conftest.py",
+        # Release script itself
+        "release.py",
     ]
 
     for pattern in exclude_patterns:
         if pattern.startswith("*"):
-            # Wildcard pattern - check extension
+            # Suffix wildcard pattern - check extension (e.g., *.pyc)
             if path.name.endswith(pattern[1:]):
+                return True
+        elif pattern.endswith("*"):
+            # Prefix wildcard pattern (e.g., test_*)
+            prefix = pattern[:-1]
+            if path.name.startswith(prefix):
                 return True
         elif pattern in rel_str.split(os.sep):
             return True
         elif rel_str == pattern:
+            return True
+        elif path.name == pattern:
             return True
 
     return False
@@ -68,9 +84,9 @@ def create_release_zip(output_dir: Path = None, version: str = None) -> Path:
 
     # Generate archive name
     if version:
-        archive_name = f"squidbot-{version}.zip"
+        archive_name = f"SquidBot-{version}.zip"
     else:
-        archive_name = "squidbot.zip"
+        archive_name = "SquidBot.zip"
 
     archive_path = output_dir / archive_name
 

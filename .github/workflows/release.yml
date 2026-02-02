@@ -31,8 +31,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: squidbot-${{ inputs.version }}
-          path: app/dist/squidbot-${{ inputs.version }}.zip
+          name: SquidBot-${{ inputs.version }}
+          path: app/dist/SquidBot-${{ inputs.version }}.zip
 
   release:
     needs: build
@@ -64,7 +64,7 @@ jobs:
             ### Download & Run
             ```bash
             # Download and extract
-            unzip squidbot-${{ inputs.version }}.zip
+            unzip SquidBot-${{ inputs.version }}.zip
 
             # Install dependencies
             cd app
