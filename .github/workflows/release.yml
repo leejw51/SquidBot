@@ -32,10 +32,11 @@ jobs:
       - name: List built files
         run: ls -la app/dist/
 
-      - name: Upload to Release
+      - name: Create Release and Upload
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "v${{ steps.version.outputs.VERSION }}" \
+          gh release create "v${{ steps.version.outputs.VERSION }}" \
             app/dist/SquidBot-${{ steps.version.outputs.VERSION }}.zip \
-            --clobber
+            --title "v${{ steps.version.outputs.VERSION }}" \
+            --generate-notes
