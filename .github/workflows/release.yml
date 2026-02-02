@@ -1,26 +1,19 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux
-            artifact: squidbot-linux-x86_64
-          - os: macos-latest
-            platform: macos
-            artifact: squidbot-macos-arm64
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -30,42 +23,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Create release zip
         working-directory: ./app
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Install Playwright browsers
-        working-directory: ./app
-        run: playwright install chromium
-
-      - name: Build and verify package
-        working-directory: ./app
-        run: make package
-
-      - name: Verify codesign (macOS)
-        if: matrix.platform == 'macos'
-        working-directory: ./app
-        run: |
-          echo "=== Verifying code signatures ==="
-          codesign -v dist/squidbot/squidbot && echo "Main binary: signed"
-          codesign -v dist/squidbot/_internal/Python.framework 2>/dev/null && echo "Python.framework: signed" || echo "Python.framework: not found or not signed"
-
-      - name: Create archive
-        working-directory: ./app
-        run: |
-          cd dist
-          tar -czvf ${{ matrix.artifact }}.tar.gz squidbot/
-          mv ${{ matrix.artifact }}.tar.gz ../
+        run: python release.py -v ${{ inputs.version }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: app/${{ matrix.artifact }}.tar.gz
+          name: squidbot-${{ inputs.version }}
+          path: app/dist/squidbot-${{ inputs.version }}.zip
 
   release:
     needs: build
@@ -83,38 +50,31 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
+          tag_name: v${{ inputs.version }}
+          name: v${{ inputs.version }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: false
           generate_release_notes: true
           body: |
             ## Installation
 
             ### Prerequisites
-            Install Playwright browsers (required for web browsing):
-            ```bash
-            pip install playwright
-            playwright install chromium
-            ```
+            - Python 3.12+
 
-            ### macOS (Apple Silicon)
+            ### Download & Run
             ```bash
             # Download and extract
-            tar -xzf squidbot-macos-arm64.tar.gz
+            unzip squidbot-${{ inputs.version }}.zip
 
-            # Remove quarantine attribute (required for downloaded binaries)
-            find squidbot -exec xattr -c {} \;
+            # Install dependencies
+            cd app
+            pip install -r requirements.txt
+            playwright install chromium
 
             # Run
-            ./squidbot/squidbot start
-            ```
-
-            ### Linux
-            ```bash
-            tar -xzf squidbot-linux-x86_64.tar.gz
-            ./squidbot/squidbot start
+            python daemon.py start
             ```
 
             ---
           files: |
-            artifacts/**/*.tar.gz
+            artifacts/**/*.zip

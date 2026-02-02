@@ -1,5 +1,5 @@
 .PHONY: all start stop stopall restart status logs client test testall integrationtest clean help \
-        install install-dev poetry-install poetry-install-dev package package-clean info
+        install install-dev poetry-install poetry-install-dev package package-version package-clean info
 
 # Configuration (can be overridden via environment)
 SQUIDBOT_HOME ?= $(HOME)/.squidbot
@@ -171,50 +171,19 @@ poetry-client:
 # Packaging
 # ============================================================
 
-# Build standalone binary with PyInstaller (--onedir for faster startup, no decompression)
+# Create release zip of the app folder
 package:
-	pyinstaller --onedir --noconfirm --name squidbot \
-		--hidden-import=tiktoken_ext.openai_public \
-		--hidden-import=tiktoken_ext \
-		--hidden-import=aiosqlite \
-		--hidden-import=numpy \
-		--hidden-import=daemon \
-		--collect-data duckduckgo_search \
-		--add-data "skills_template:skills_template" \
-		server.py
-	@echo "Binary created: dist/squidbot/squidbot"
-	@# Sign on macOS
-	@if [ "$$(uname)" = "Darwin" ]; then \
-		echo "=== Signing macOS binaries ==="; \
-		find dist/squidbot -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign - {} \; 2>/dev/null || true; \
-		find dist/squidbot -type d -name "*.framework" -exec codesign --force --deep --sign - {} \; 2>/dev/null || true; \
-		codesign --force --deep --sign - dist/squidbot/squidbot; \
-		echo "Signing complete"; \
-	fi
-	@# Verify binary can execute (status command is safe - just checks if running)
-	@echo "=== Verifying binary ==="
-	@if dist/squidbot/squidbot status 2>&1 | grep -q "SquidBot"; then \
-		echo "Binary verification: PASSED"; \
-	else \
-		echo "Binary verification: FAILED"; \
+	python release.py
+
+# Create release zip with version tag
+package-version:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Usage: make package-version VERSION=1.0.0"; \
 		exit 1; \
 	fi
+	python release.py -v $(VERSION)
 
-# Build with console visible (for debugging)
-package-debug:
-	pyinstaller --onedir --noconfirm --name squidbot-debug \
-		--console \
-		--hidden-import=tiktoken_ext.openai_public \
-		--hidden-import=tiktoken_ext \
-		--hidden-import=aiosqlite \
-		--hidden-import=numpy \
-		--hidden-import=daemon \
-		--collect-data duckduckgo_search \
-		--add-data "skills_template:skills_template" \
-		server.py
-	@echo "Debug binary created: dist/squidbot-debug/squidbot-debug"
-
-# Clean PyInstaller artifacts
+# Clean build artifacts
 package-clean:
 	rm -rf build/ dist/ *.spec
 
@@ -266,9 +235,9 @@ help:
 	@echo "  make check-playwright  - Check Playwright is working"
 	@echo ""
 	@echo "Packaging:"
-	@echo "  make package       - Build standalone binary"
-	@echo "  make package-debug - Build binary with console"
-	@echo "  make package-clean - Remove build artifacts"
+	@echo "  make package                  - Create release zip of app folder"
+	@echo "  make package-version VERSION= - Create release zip with version"
+	@echo "  make package-clean            - Remove build artifacts"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean        - Remove all cache and build files"
