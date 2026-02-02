@@ -19,6 +19,9 @@ jobs:
           - os: macos-latest
             platform: macos
             artifact: squidbot-macos-arm64
+          - os: macos-13
+            platform: macos
+            artifact: squidbot-macos-x86_64
 
     runs-on: ${{ matrix.os }}
 
@@ -46,6 +49,19 @@ jobs:
         working-directory: ./app
         run: make package
 
+      - name: Sign macOS binaries (ad-hoc)
+        if: matrix.platform == 'macos'
+        working-directory: ./app
+        run: |
+          # Sign all binaries and dylibs recursively
+          find dist/squidbot -type f \( -name "*.dylib" -o -name "*.so" -o -perm +111 \) | while read f; do
+            codesign --force --deep --sign - "$f" 2>/dev/null || true
+          done
+          # Sign the main executable
+          codesign --force --deep --sign - dist/squidbot/squidbot
+          # Verify signing
+          codesign -v dist/squidbot/squidbot && echo "Signing verified"
+
       - name: Create archive (Linux)
         if: matrix.platform == 'linux'
         working-directory: ./app
@@ -59,6 +75,7 @@ jobs:
         working-directory: ./app
         run: |
           cd dist
+          # Create archive preserving signatures
           tar -czvf ${{ matrix.artifact }}.tar.gz squidbot/
           mv ${{ matrix.artifact }}.tar.gz ../
 
@@ -88,5 +105,27 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
+          body: |
+            ## Installation
+
+            ### macOS
+            ```bash
+            # Download and extract
+            tar -xzf squidbot-macos-arm64.tar.gz  # or squidbot-macos-x86_64.tar.gz for Intel
+
+            # Remove quarantine attribute (required for downloaded binaries)
+            xattr -cr squidbot/
+
+            # Run
+            ./squidbot/squidbot start
+            ```
+
+            ### Linux
+            ```bash
+            tar -xzf squidbot-linux-x86_64.tar.gz
+            ./squidbot/squidbot start
+            ```
+
+            ---
           files: |
             artifacts/**/*.tar.gz
