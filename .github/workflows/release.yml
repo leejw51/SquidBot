@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,53 +28,33 @@ jobs:
         working-directory: ./app
         run: python release.py -v ${{ inputs.version }}
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SquidBot-${{ inputs.version }}
-          path: app/dist/SquidBot-${{ inputs.version }}.zip
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: List artifacts
-        run: find artifacts -type f
+      - name: List built files
+        run: ls -la app/dist/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ inputs.version }}
-          name: v${{ inputs.version }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          body: |
-            ## Installation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ inputs.version }}" \
+            --title "v${{ inputs.version }}" \
+            --generate-notes \
+            --notes "## Installation
 
-            ### Prerequisites
-            - Python 3.12+
+          ### Prerequisites
+          - Python 3.12+
 
-            ### Download & Run
-            ```bash
-            # Download and extract
-            unzip SquidBot-${{ inputs.version }}.zip
+          ### Download & Run
+          \`\`\`bash
+          # Download and extract
+          unzip SquidBot-${{ inputs.version }}.zip
 
-            # Install dependencies
-            cd app
-            pip install -r requirements.txt
-            playwright install chromium
+          # Install dependencies
+          cd app
+          pip install -r requirements.txt
+          playwright install chromium
 
-            # Run
-            python daemon.py start
-            ```
-
-            ---
-          files: |
-            artifacts/**/*.zip
+          # Run
+          python daemon.py start
+          \`\`\`
+          " \
+            app/dist/SquidBot-${{ inputs.version }}.zip
