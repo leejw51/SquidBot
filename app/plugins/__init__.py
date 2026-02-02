@@ -5,8 +5,8 @@ Provides a modular plugin architecture for extending SquidBot functionality.
 """
 
 from plugins.base import Plugin, PluginApi, PluginManifest
-from plugins.hooks import (AfterToolCallEvent,  # Event types; Global instances
-                           AgentEndEvent, BeforeAgentStartEvent,
+from plugins.hooks import AfterToolCallEvent  # Event types; Global instances
+from plugins.hooks import (AgentEndEvent, BeforeAgentStartEvent,
                            BeforeAgentStartResult, BeforeToolCallEvent,
                            BeforeToolCallResult, HookContext, HookName,
                            HookRegistry, HookRunner, MessageReceivedEvent,

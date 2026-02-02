@@ -151,15 +151,13 @@ class TestCodeRunTool:
         """Test running Zig code."""
         project_dir = temp_workspace / "zig_project"
         project_dir.mkdir()
-        (project_dir / "hello.zig").write_text(
-            """
+        (project_dir / "hello.zig").write_text("""
 const std = @import("std");
 
 pub fn main() void {
     std.debug.print("Hello from Zig!\\n", .{});
 }
-"""
-        )
+""")
 
         result = await tool.execute(project="zig_project", filename="hello.zig")
 
@@ -247,15 +245,13 @@ class TestZigBuildTool:
         """Test building a single Zig file."""
         project_dir = temp_workspace / "project"
         project_dir.mkdir()
-        (project_dir / "main.zig").write_text(
-            """
+        (project_dir / "main.zig").write_text("""
 const std = @import("std");
 
 pub fn main() void {
     std.debug.print("Built!", .{});
 }
-"""
-        )
+""")
 
         result = await tool.execute(project="project", filename="main.zig")
 
@@ -283,16 +279,14 @@ class TestZigTestTool:
         """Test running Zig tests."""
         project_dir = temp_workspace / "project"
         project_dir.mkdir()
-        (project_dir / "test.zig").write_text(
-            """
+        (project_dir / "test.zig").write_text("""
 const std = @import("std");
 const expect = std.testing.expect;
 
 test "simple test" {
     try expect(1 + 1 == 2);
 }
-"""
-        )
+""")
 
         result = await tool.execute(project="project", filename="test.zig")
 
@@ -311,15 +305,13 @@ class TestPythonTestTool:
         """Test running pytest."""
         project_dir = temp_workspace / "project"
         project_dir.mkdir()
-        (project_dir / "test_example.py").write_text(
-            """
+        (project_dir / "test_example.py").write_text("""
 def test_addition():
     assert 1 + 1 == 2
 
 def test_subtraction():
     assert 5 - 3 == 2
-"""
-        )
+""")
 
         result = await tool.execute(project="project")
 
@@ -647,14 +639,12 @@ class TestZigToolsEdgeCases:
         """Test building with release optimization."""
         project_dir = temp_workspace / "project"
         project_dir.mkdir()
-        (project_dir / "main.zig").write_text(
-            """
+        (project_dir / "main.zig").write_text("""
 const std = @import("std");
 pub fn main() void {
     std.debug.print("Release!", .{});
 }
-"""
-        )
+""")
 
         result = await build_tool.execute(
             project="project", filename="main.zig", release=True
@@ -684,12 +674,10 @@ class TestPythonTestEdgeCases:
         """Test running failing tests."""
         project_dir = temp_workspace / "project"
         project_dir.mkdir()
-        (project_dir / "test_fail.py").write_text(
-            """
+        (project_dir / "test_fail.py").write_text("""
 def test_will_fail():
     assert 1 == 2, "Expected failure"
-"""
-        )
+""")
 
         result = await tool.execute(project="project")
         assert "failed" in result.lower() or "FAILED" in result

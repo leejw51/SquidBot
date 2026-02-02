@@ -88,13 +88,11 @@ class TestLoadSkill:
             skill_dir.mkdir()
 
             skill_file = skill_dir / "SKILL.md"
-            skill_file.write_text(
-                """---
+            skill_file.write_text("""---
 name: test
 description: Test skill
 ---
-Skill instructions here."""
-            )
+Skill instructions here.""")
 
             skill = await load_skill(skill_dir)
 
@@ -111,12 +109,10 @@ Skill instructions here."""
             skill_dir.mkdir()
 
             skill_file = skill_dir / "skill.md"
-            skill_file.write_text(
-                """---
+            skill_file.write_text("""---
 name: lowercase
 ---
-Content."""
-            )
+Content.""")
 
             skill = await load_skill(skill_dir)
 

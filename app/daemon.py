@@ -111,6 +111,11 @@ def start():
     # Show environment info to console
     show_env_info()
 
+    # Check Playwright before starting (so user sees errors immediately)
+    from playwright_check import require_playwright_or_exit
+
+    require_playwright_or_exit()
+
     print(f"Starting SquidBot server...")
     print(f"Log file: {LOG_FILE}")
 

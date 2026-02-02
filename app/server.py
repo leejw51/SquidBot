@@ -17,6 +17,7 @@ from channels import (ChannelRouter, MessagePayload, TCPAdapter,
 from config import (OPENAI_API_KEY, SQUID_PORT, TELEGRAM_BOT_TOKEN,
                     init_default_files, show_startup_info)
 from lanes import LANE_CRON, LANE_MAIN, CommandLane
+from playwright_check import require_playwright_or_exit
 from scheduler import Scheduler
 from session import (ChannelType, DeliveryContext, Session,
                      get_session_manager, record_inbound_session)
@@ -434,6 +435,10 @@ def run_server():
     # Show configuration and initialize defaults
     show_startup_info()
     init_default_files()
+
+    # Check Playwright browser is working before starting
+    # This will exit with error if browser is not installed/working
+    require_playwright_or_exit()
 
     logger.info("Starting SquidBot server...")
     asyncio.run(async_main())

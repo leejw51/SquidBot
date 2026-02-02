@@ -125,6 +125,18 @@ install-dev:
 	pip install pytest pytest-asyncio pytest-cov
 	playwright install chromium
 
+# Install/reinstall Playwright browsers
+install-browsers:
+	playwright install chromium
+
+# Check Playwright installation and web browsing
+check-playwright:
+	python playwright_check.py
+
+# Check Playwright installation only (skip web test)
+check-playwright-offline:
+	python playwright_check.py --skip-web
+
 # Install with Poetry
 poetry-install:
 	poetry install --only main
@@ -232,8 +244,10 @@ help:
 	@echo "  make test-cov        - Run unit tests with coverage"
 	@echo ""
 	@echo "Installation:"
-	@echo "  make install      - Install dependencies (pip)"
-	@echo "  make install-dev  - Install with dev dependencies"
+	@echo "  make install           - Install dependencies (pip)"
+	@echo "  make install-dev       - Install with dev dependencies"
+	@echo "  make install-browsers  - Install Playwright browsers"
+	@echo "  make check-playwright  - Check Playwright is working"
 	@echo ""
 	@echo "Packaging:"
 	@echo "  make package       - Build standalone binary"
