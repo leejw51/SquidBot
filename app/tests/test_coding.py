@@ -623,6 +623,7 @@ class TestZigToolsEdgeCases:
     def test_tool(self):
         return ZigTestTool()
 
+    @pytest.mark.skipif(not shutil.which("zig"), reason="Zig not installed")
     async def test_build_no_filename_no_buildzig(self, build_tool, temp_workspace):
         """Test build without filename or build.zig."""
         project_dir = temp_workspace / "project"
@@ -632,6 +633,7 @@ class TestZigToolsEdgeCases:
         assert "Error" in result
         assert "No build.zig" in result
 
+    @pytest.mark.skipif(not shutil.which("zig"), reason="Zig not installed")
     async def test_test_no_filename_no_buildzig(self, test_tool, temp_workspace):
         """Test running tests without filename or build.zig."""
         project_dir = temp_workspace / "project"

@@ -14,6 +14,18 @@ os.environ.setdefault("SQUIDBOT_CHAINID", "338")
 os.environ.setdefault("SQUIDBOT_RPC", "https://evm-dev-t3.cronos.org")
 os.environ.setdefault("SQUIDBOT_WALLET_INDEX", "0")
 
+# Check if eth_account is available for tests that require it
+try:
+    import eth_account
+
+    HAS_ETH_ACCOUNT = True
+except ImportError:
+    HAS_ETH_ACCOUNT = False
+
+requires_eth_account = pytest.mark.skipif(
+    not HAS_ETH_ACCOUNT, reason="eth_account not installed"
+)
+
 
 class TestPluginSystem:
     """Test the plugin system itself."""
@@ -68,6 +80,7 @@ class TestPluginSystem:
         assert "get_tx_count" in tool_names
 
 
+@requires_eth_account
 class TestWalletGeneration:
     """Test wallet generation and mnemonic handling."""
 
@@ -137,6 +150,7 @@ class TestWalletGeneration:
 class TestWalletInfoTool:
     """Test WalletInfoTool."""
 
+    @requires_eth_account
     @pytest.mark.asyncio
     async def test_wallet_info_success(self):
         """Test wallet_info returns correct data."""
@@ -172,6 +186,7 @@ class TestWalletInfoTool:
 class TestGetBalanceTool:
     """Test GetBalanceTool."""
 
+    @requires_eth_account
     @pytest.mark.asyncio
     async def test_get_balance_own_wallet(self):
         """Test getting balance of own wallet."""
@@ -319,6 +334,7 @@ class TestSendCROTool:
 class TestGetTxCountTool:
     """Test GetTxCountTool."""
 
+    @requires_eth_account
     @pytest.mark.asyncio
     async def test_get_tx_count_own_wallet(self):
         """Test getting tx count of own wallet."""
