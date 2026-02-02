@@ -19,9 +19,6 @@ jobs:
           - os: macos-latest
             platform: macos
             artifact: squidbot-macos-arm64
-          - os: macos-13
-            platform: macos
-            artifact: squidbot-macos-x86_64
 
     runs-on: ${{ matrix.os }}
 
@@ -108,10 +105,10 @@ jobs:
           body: |
             ## Installation
 
-            ### macOS
+            ### macOS (Apple Silicon)
             ```bash
             # Download and extract
-            tar -xzf squidbot-macos-arm64.tar.gz  # or squidbot-macos-x86_64.tar.gz for Intel
+            tar -xzf squidbot-macos-arm64.tar.gz
 
             # Remove quarantine attribute (required for downloaded binaries)
             xattr -cr squidbot/
