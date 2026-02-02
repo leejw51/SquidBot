@@ -42,37 +42,22 @@ jobs:
         working-directory: ./app
         run: playwright install chromium
 
-      - name: Build package
+      - name: Build and verify package
         working-directory: ./app
         run: make package
 
-      - name: Sign macOS binaries (ad-hoc)
+      - name: Verify codesign (macOS)
         if: matrix.platform == 'macos'
         working-directory: ./app
         run: |
-          # Sign all binaries and dylibs recursively
-          find dist/squidbot -type f \( -name "*.dylib" -o -name "*.so" -o -perm +111 \) | while read f; do
-            codesign --force --deep --sign - "$f" 2>/dev/null || true
-          done
-          # Sign the main executable
-          codesign --force --deep --sign - dist/squidbot/squidbot
-          # Verify signing
-          codesign -v dist/squidbot/squidbot && echo "Signing verified"
+          echo "=== Verifying code signatures ==="
+          codesign -v dist/squidbot/squidbot && echo "Main binary: signed"
+          codesign -v dist/squidbot/_internal/Python.framework 2>/dev/null && echo "Python.framework: signed" || echo "Python.framework: not found or not signed"
 
-      - name: Create archive (Linux)
-        if: matrix.platform == 'linux'
+      - name: Create archive
         working-directory: ./app
         run: |
           cd dist
-          tar -czvf ${{ matrix.artifact }}.tar.gz squidbot/
-          mv ${{ matrix.artifact }}.tar.gz ../
-
-      - name: Create archive (macOS)
-        if: matrix.platform == 'macos'
-        working-directory: ./app
-        run: |
-          cd dist
-          # Create archive preserving signatures
           tar -czvf ${{ matrix.artifact }}.tar.gz squidbot/
           mv ${{ matrix.artifact }}.tar.gz ../
 

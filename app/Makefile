@@ -183,6 +183,22 @@ package:
 		--add-data "skills_template:skills_template" \
 		server.py
 	@echo "Binary created: dist/squidbot/squidbot"
+	@# Sign on macOS
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		echo "=== Signing macOS binaries ==="; \
+		find dist/squidbot -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign - {} \; 2>/dev/null || true; \
+		find dist/squidbot -type d -name "*.framework" -exec codesign --force --deep --sign - {} \; 2>/dev/null || true; \
+		codesign --force --deep --sign - dist/squidbot/squidbot; \
+		echo "Signing complete"; \
+	fi
+	@# Verify binary can execute (status command is safe - just checks if running)
+	@echo "=== Verifying binary ==="
+	@if dist/squidbot/squidbot status 2>&1 | grep -q "SquidBot"; then \
+		echo "Binary verification: PASSED"; \
+	else \
+		echo "Binary verification: FAILED"; \
+		exit 1; \
+	fi
 
 # Build with console visible (for debugging)
 package-debug:
