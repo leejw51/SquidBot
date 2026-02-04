@@ -21,22 +21,42 @@ An autonomous AI agent with Telegram integration, persistent memory, web search,
 - **Custom Skills** - Extend agent behavior with markdown skill files
 - **Custom Character** - Define AI personality and communication style
 
+## Installation
+
+### From PyPI (Recommended)
+
+```bash
+pip install squidbot
+```
+
+### From Source
+
+```bash
+git clone https://github.com/leejw51/SquidBot.git
+cd SquidBot/app
+pip install -e .
+```
+
 ## Quick Start
 
 ```bash
-cd app
-
-# Install dependencies
-make install
-
 # Configure environment
 cp .env.example .env
 # Edit .env with your API keys
 
 # Start the server
-make start
+squidbot start
 
 # Run the chat client (optional - for terminal chat)
+squidbot-client
+```
+
+### Alternative: Using Make (from source)
+
+```bash
+cd app
+make install
+make start
 make client
 ```
 
