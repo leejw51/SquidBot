@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "squidbot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Autonomous AI agent with Telegram, tool chaining, skills, and proactive messaging"
 authors = ["leejw51"]
 license = "MIT"
