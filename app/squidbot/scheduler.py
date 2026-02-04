@@ -9,8 +9,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-from config import HEARTBEAT_INTERVAL_MINUTES
-from tools.cron import load_cron_jobs, save_cron_jobs
+from .config import HEARTBEAT_INTERVAL_MINUTES
+from .tools.cron import load_cron_jobs, save_cron_jobs
 
 logger = logging.getLogger(__name__)
 

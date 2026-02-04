@@ -12,7 +12,7 @@ class TestConfigValidation:
     def test_validate_config_raises_on_missing_token(self):
         """Test validation raises ValueError when TELEGRAM_BOT_TOKEN is empty."""
         # Import fresh config module
-        import config
+        from squidbot import config
 
         # Save original values
         orig_token = config.TELEGRAM_BOT_TOKEN
@@ -34,7 +34,7 @@ class TestConfigValidation:
 
     def test_validate_config_raises_on_missing_api_key(self):
         """Test validation raises ValueError when OPENAI_API_KEY is empty."""
-        import config
+        from squidbot import config
 
         orig_token = config.TELEGRAM_BOT_TOKEN
         orig_key = config.OPENAI_API_KEY
@@ -53,7 +53,7 @@ class TestConfigValidation:
 
     def test_validate_config_raises_on_both_missing(self):
         """Test validation lists both missing configs."""
-        import config
+        from squidbot import config
 
         orig_token = config.TELEGRAM_BOT_TOKEN
         orig_key = config.OPENAI_API_KEY
@@ -74,7 +74,7 @@ class TestConfigValidation:
 
     def test_validate_config_passes_with_values(self):
         """Test validation passes when config values are set."""
-        import config
+        from squidbot import config
 
         orig_token = config.TELEGRAM_BOT_TOKEN
         orig_key = config.OPENAI_API_KEY
@@ -95,7 +95,7 @@ class TestConfigDefaults:
 
     def test_openai_model_has_default(self):
         """Test OPENAI_MODEL has a default value."""
-        import config
+        from squidbot import config
 
         # The default is set during import from env or hardcoded
         assert config.OPENAI_MODEL is not None
@@ -103,14 +103,14 @@ class TestConfigDefaults:
 
     def test_heartbeat_interval_is_integer(self):
         """Test HEARTBEAT_INTERVAL_MINUTES is an integer."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.HEARTBEAT_INTERVAL_MINUTES, int)
         assert config.HEARTBEAT_INTERVAL_MINUTES >= 0
 
     def test_squid_port_is_integer(self):
         """Test SQUID_PORT is an integer."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.SQUID_PORT, int)
         assert config.SQUID_PORT > 0
@@ -121,37 +121,37 @@ class TestConfigPaths:
 
     def test_data_dir_is_path(self):
         """Test DATA_DIR is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.DATA_DIR, Path)
 
     def test_memory_file_is_path(self):
         """Test MEMORY_FILE is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.MEMORY_FILE, Path)
 
     def test_cron_file_is_path(self):
         """Test CRON_FILE is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.CRON_FILE, Path)
 
     def test_memory_file_has_correct_name(self):
         """Test MEMORY_FILE has correct filename."""
-        import config
+        from squidbot import config
 
         assert config.MEMORY_FILE.name == "memory.json"
 
     def test_cron_file_in_data_dir(self):
         """Test CRON_FILE is inside DATA_DIR."""
-        import config
+        from squidbot import config
 
         assert config.CRON_FILE.parent == config.DATA_DIR
 
     def test_data_dir_exists_or_can_be_created(self):
         """Test DATA_DIR can be created if it doesn't exist."""
-        import config
+        from squidbot import config
 
         # The config module creates DATA_DIR on import
         # We just verify it's a valid path
@@ -159,28 +159,28 @@ class TestConfigPaths:
 
     def test_character_file_is_path(self):
         """Test CHARACTER_FILE is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.CHARACTER_FILE, Path)
         assert config.CHARACTER_FILE.name == "CHARACTER.md"
 
     def test_skills_dir_is_path(self):
         """Test SKILLS_DIR is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.SKILLS_DIR, Path)
         assert config.SKILLS_DIR.name == "skills"
 
     def test_coding_dir_is_path(self):
         """Test CODING_DIR is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.CODING_DIR, Path)
         assert config.CODING_DIR.name == "coding"
 
     def test_sessions_dir_is_path(self):
         """Test SESSIONS_DIR is a Path object."""
-        import config
+        from squidbot import config
 
         assert isinstance(config.SESSIONS_DIR, Path)
         assert config.SESSIONS_DIR.name == "sessions"
@@ -196,7 +196,7 @@ class TestSquidbotHome:
         # Re-import to get fresh values
         import importlib
 
-        import config
+        from squidbot import config
 
         importlib.reload(config)
 
@@ -209,7 +209,7 @@ class TestSquidbotHome:
 
         import importlib
 
-        import config
+        from squidbot import config
 
         importlib.reload(config)
 
@@ -225,7 +225,7 @@ class TestInitDefaultFiles:
 
         import importlib
 
-        import config
+        from squidbot import config
 
         importlib.reload(config)
 
@@ -245,7 +245,7 @@ class TestInitDefaultFiles:
 
         import importlib
 
-        import config
+        from squidbot import config
 
         importlib.reload(config)
 
@@ -266,7 +266,7 @@ class TestInitDefaultFiles:
 
         import importlib
 
-        import config
+        from squidbot import config
 
         importlib.reload(config)
 
@@ -286,7 +286,7 @@ class TestInitDefaultFiles:
 
         import importlib
 
-        import config
+        from squidbot import config
 
         importlib.reload(config)
 
@@ -303,7 +303,7 @@ class TestShowStartupInfo:
 
     def test_show_startup_info_runs(self, capsys):
         """Test that show_startup_info runs without error."""
-        import config
+        from squidbot import config
 
         config.show_startup_info()
 
@@ -314,7 +314,7 @@ class TestShowStartupInfo:
 
     def test_show_startup_info_shows_paths(self, capsys):
         """Test that show_startup_info shows all paths."""
-        import config
+        from squidbot import config
 
         config.show_startup_info()
 
@@ -326,7 +326,7 @@ class TestShowStartupInfo:
 
     def test_show_startup_info_shows_env_hint(self, capsys):
         """Test that show_startup_info shows env var hints."""
-        import config
+        from squidbot import config
 
         config.show_startup_info()
 

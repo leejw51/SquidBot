@@ -149,13 +149,15 @@ class TestSqliteVecWithJoin:
         conn.enable_load_extension(False)
 
         # Create regular table
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE documents (
                 id INTEGER PRIMARY KEY,
                 title TEXT,
                 content TEXT
             )
-        """)
+        """
+        )
 
         # Create vec table
         conn.execute(
@@ -236,7 +238,7 @@ class TestChunking:
 
     def test_chunk_short_text(self):
         """Test that short text is not chunked."""
-        from memory_db import chunk_text
+        from squidbot.memory_db import chunk_text
 
         text = "This is a short text."
         chunks = chunk_text(text)
@@ -245,7 +247,7 @@ class TestChunking:
 
     def test_chunk_long_text(self):
         """Test chunking of long text."""
-        from memory_db import chunk_text
+        from squidbot.memory_db import chunk_text
 
         # Create text longer than default chunk size
         text = "This is sentence one. " * 500
@@ -259,7 +261,7 @@ class TestChunking:
 
     def test_chunk_preserves_content(self):
         """Test that all content is preserved after chunking."""
-        from memory_db import chunk_text
+        from squidbot.memory_db import chunk_text
 
         text = "Word " * 1000
         chunks = chunk_text(text, chunk_size=50, overlap=10)
@@ -279,7 +281,7 @@ class TestChunking:
 
     def test_chunk_positions(self):
         """Test that chunk positions are valid."""
-        from memory_db import chunk_text
+        from squidbot.memory_db import chunk_text
 
         text = "A" * 5000
         chunks = chunk_text(text, chunk_size=100, overlap=20)
@@ -297,13 +299,13 @@ class TestMemoryDbIntegration:
     def temp_db(self, tmp_path, monkeypatch):
         """Create temporary database."""
         db_path = tmp_path / "test_memory.db"
-        monkeypatch.setattr("memory_db.DB_PATH", db_path)
+        monkeypatch.setattr("squidbot.memory_db.DB_PATH", db_path)
         return db_path
 
     @pytest.mark.skipif(not VEC_AVAILABLE, reason="sqlite-vec not installed")
     def test_init_db_creates_vec_tables(self, temp_db):
         """Test that init_db creates vec0 tables."""
-        from memory_db import init_db_sync
+        from squidbot.memory_db import init_db_sync
 
         vec_available = init_db_sync(temp_db)
         assert vec_available is True
@@ -326,7 +328,7 @@ class TestMemoryDbIntegration:
         """Test memory stats function."""
         import asyncio
 
-        from memory_db import get_memory_stats, init_db
+        from squidbot.memory_db import get_memory_stats, init_db
 
         asyncio.run(init_db())
         stats = asyncio.run(get_memory_stats())

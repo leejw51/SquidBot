@@ -1,5 +1,6 @@
 .PHONY: all start stop stopall restart status logs client test testall integrationtest clean help \
-        install install-dev poetry-install poetry-install-dev package package-version package-clean info
+        install install-dev poetry-install poetry-install-dev package package-version package-clean info \
+        build publish publish-test
 
 # Configuration (can be overridden via environment)
 SQUIDBOT_HOME ?= $(HOME)/.squidbot
@@ -30,39 +31,39 @@ info:
 
 # Start the server (daemon mode)
 start:
-	python daemon.py start
+	python -m squidbot.daemon start
 
 # Stop the server
 stop:
-	python daemon.py stop
+	python -m squidbot.daemon stop
 
 # Stop server and kill all clients
 stopall:
-	python daemon.py stopall
+	python -m squidbot.daemon stopall
 
 # Restart the server
 restart:
-	python daemon.py restart
+	python -m squidbot.daemon restart
 
 # Show server status
 status:
-	python daemon.py status
+	python -m squidbot.daemon status
 
 # Show server logs
 logs:
-	python daemon.py logs
+	python -m squidbot.daemon logs
 
 # Follow server logs in real-time
 logs-follow:
-	python daemon.py logs -f
+	python -m squidbot.daemon logs -f
 
 # Run the chat client (connects to server)
 client:
-	python client.py
+	python -m squidbot.client
 
 # Run server in foreground (for debugging)
 server:
-	python server.py
+	python -m squidbot.server
 
 # ============================================================
 # Testing
@@ -86,7 +87,7 @@ test-verbose:
 
 # Run tests with coverage
 test-cov:
-	pytest tests/ -v --cov=. --cov-report=term-missing --ignore=tests/test_integration_chaining.py
+	pytest tests/ -v --cov=squidbot --cov-report=term-missing --ignore=tests/test_integration_chaining.py
 
 # Run specific test file
 test-memory:
@@ -131,11 +132,11 @@ install-browsers:
 
 # Check Playwright installation and web browsing
 check-playwright:
-	python playwright_check.py
+	python -m squidbot.playwright_check
 
 # Check Playwright installation only (skip web test)
 check-playwright-offline:
-	python playwright_check.py --skip-web
+	python -m squidbot.playwright_check --skip-web
 
 # Install with Poetry
 poetry-install:
@@ -157,18 +158,45 @@ poetry-test:
 
 # Start server with Poetry
 poetry-start:
-	poetry run python daemon.py start
+	poetry run squidbot start
 
 # Stop server with Poetry
 poetry-stop:
-	poetry run python daemon.py stop
+	poetry run squidbot stop
 
 # Run client with Poetry
 poetry-client:
-	poetry run python client.py
+	poetry run squidbot-client
 
 # ============================================================
-# Packaging
+# PyPI Publishing
+# ============================================================
+
+# Build package (wheel and sdist)
+build:
+	poetry build
+
+# Publish to PyPI (requires token configured)
+publish: build
+	poetry publish
+
+# Publish to TestPyPI first (for testing)
+publish-test: build
+	poetry publish -r testpypi
+
+# Configure PyPI token
+config-pypi:
+	@echo "Get your token from: https://pypi.org/manage/account/token/"
+	@echo "Then run: poetry config pypi-token.pypi <your-token>"
+
+# Configure TestPyPI (for testing before real publish)
+config-testpypi:
+	poetry config repositories.testpypi https://test.pypi.org/legacy/
+	@echo "Get your token from: https://test.pypi.org/manage/account/token/"
+	@echo "Then run: poetry config pypi-token.testpypi <your-token>"
+
+# ============================================================
+# Packaging (zip release)
 # ============================================================
 
 # Create release zip of the app folder
@@ -233,6 +261,12 @@ help:
 	@echo "  make install-dev       - Install with dev dependencies"
 	@echo "  make install-browsers  - Install Playwright browsers"
 	@echo "  make check-playwright  - Check Playwright is working"
+	@echo ""
+	@echo "PyPI Publishing:"
+	@echo "  make build             - Build wheel and sdist"
+	@echo "  make publish           - Publish to PyPI"
+	@echo "  make publish-test      - Publish to TestPyPI"
+	@echo "  make config-pypi       - Show how to configure PyPI token"
 	@echo ""
 	@echo "Packaging:"
 	@echo "  make package                  - Create release zip of app folder"

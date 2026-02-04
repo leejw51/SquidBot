@@ -19,9 +19,9 @@ from telegram import Update
 from telegram.ext import (Application, CommandHandler, ContextTypes,
                           MessageHandler, filters)
 
-from agent import run_agent_with_history
-from config import TELEGRAM_BOT_TOKEN, validate_config
-from scheduler import Scheduler
+from .agent import run_agent_with_history
+from .config import TELEGRAM_BOT_TOKEN, validate_config
+from .scheduler import Scheduler
 
 # Setup logging
 logging.basicConfig(

@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable
 
-from session import ChannelType, DeliveryContext
+from .session import ChannelType, DeliveryContext
 
 logger = logging.getLogger(__name__)
 

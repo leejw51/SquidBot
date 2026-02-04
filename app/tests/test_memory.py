@@ -2,8 +2,8 @@
 
 import pytest
 
-from memory_db import (add_memory, delete_memory, get_memory_context, init_db,
-                       load_all_memories, search_memory)
+from squidbot.memory_db import (add_memory, delete_memory, get_memory_context,
+                                init_db, load_all_memories, search_memory)
 
 
 class TestMemory:

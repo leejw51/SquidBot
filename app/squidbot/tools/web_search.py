@@ -2,7 +2,7 @@
 
 from duckduckgo_search import DDGS
 
-from tools.base import Tool
+from .base import Tool
 
 
 class WebSearchTool(Tool):

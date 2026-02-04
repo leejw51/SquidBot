@@ -9,10 +9,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
-from tools.base import Tool
+from ..tools.base import Tool
 
 if TYPE_CHECKING:
-    from plugins.hooks import HookName, HookRegistry
+    from .hooks import HookName, HookRegistry
 
 
 @dataclass

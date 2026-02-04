@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent import (build_system_prompt, execute_tool, get_base_system_prompt,
-                   run_agent_with_history)
+from squidbot.agent import (build_system_prompt, execute_tool,
+                            get_base_system_prompt, run_agent_with_history)
 
 
 class TestSecurityRestrictions:
@@ -78,11 +78,11 @@ class TestBuildSystemPrompt:
     async def test_build_basic_prompt(self):
         """Test building basic system prompt."""
         with patch(
-            "agent.get_character_prompt", new_callable=AsyncMock
+            "squidbot.agent.get_character_prompt", new_callable=AsyncMock
         ) as mock_char, patch(
-            "agent.get_skills_context", new_callable=AsyncMock
+            "squidbot.agent.get_skills_context", new_callable=AsyncMock
         ) as mock_skills, patch(
-            "agent.get_memory_context", new_callable=AsyncMock
+            "squidbot.agent.get_memory_context", new_callable=AsyncMock
         ) as mock_memory:
             mock_char.return_value = ""
             mock_skills.return_value = ""
@@ -97,11 +97,11 @@ class TestBuildSystemPrompt:
     async def test_build_prompt_includes_security(self):
         """Test that built prompt includes security restrictions."""
         with patch(
-            "agent.get_character_prompt", new_callable=AsyncMock
+            "squidbot.agent.get_character_prompt", new_callable=AsyncMock
         ) as mock_char, patch(
-            "agent.get_skills_context", new_callable=AsyncMock
+            "squidbot.agent.get_skills_context", new_callable=AsyncMock
         ) as mock_skills, patch(
-            "agent.get_memory_context", new_callable=AsyncMock
+            "squidbot.agent.get_memory_context", new_callable=AsyncMock
         ) as mock_memory:
             mock_char.return_value = ""
             mock_skills.return_value = ""
@@ -117,11 +117,11 @@ class TestBuildSystemPrompt:
     async def test_build_prompt_with_character(self):
         """Test building prompt with character."""
         with patch(
-            "agent.get_character_prompt", new_callable=AsyncMock
+            "squidbot.agent.get_character_prompt", new_callable=AsyncMock
         ) as mock_char, patch(
-            "agent.get_skills_context", new_callable=AsyncMock
+            "squidbot.agent.get_skills_context", new_callable=AsyncMock
         ) as mock_skills, patch(
-            "agent.get_memory_context", new_callable=AsyncMock
+            "squidbot.agent.get_memory_context", new_callable=AsyncMock
         ) as mock_memory:
             mock_char.return_value = "## Character\nYou are Bob."
             mock_skills.return_value = ""
@@ -135,11 +135,11 @@ class TestBuildSystemPrompt:
     async def test_build_prompt_with_skills(self):
         """Test building prompt with skills."""
         with patch(
-            "agent.get_character_prompt", new_callable=AsyncMock
+            "squidbot.agent.get_character_prompt", new_callable=AsyncMock
         ) as mock_char, patch(
-            "agent.get_skills_context", new_callable=AsyncMock
+            "squidbot.agent.get_skills_context", new_callable=AsyncMock
         ) as mock_skills, patch(
-            "agent.get_memory_context", new_callable=AsyncMock
+            "squidbot.agent.get_memory_context", new_callable=AsyncMock
         ) as mock_memory:
             mock_char.return_value = ""
             mock_skills.return_value = "## Skills\n- Search\n- Browse"
@@ -154,11 +154,11 @@ class TestBuildSystemPrompt:
     async def test_build_prompt_with_memory(self):
         """Test building prompt with memory context."""
         with patch(
-            "agent.get_character_prompt", new_callable=AsyncMock
+            "squidbot.agent.get_character_prompt", new_callable=AsyncMock
         ) as mock_char, patch(
-            "agent.get_skills_context", new_callable=AsyncMock
+            "squidbot.agent.get_skills_context", new_callable=AsyncMock
         ) as mock_skills, patch(
-            "agent.get_memory_context", new_callable=AsyncMock
+            "squidbot.agent.get_memory_context", new_callable=AsyncMock
         ) as mock_memory:
             mock_char.return_value = ""
             mock_skills.return_value = ""
@@ -179,7 +179,7 @@ class TestExecuteTool:
         mock_tool = MagicMock()
         mock_tool.execute = AsyncMock(return_value="Tool result")
 
-        with patch("agent.get_tool_by_name", return_value=mock_tool):
+        with patch("squidbot.agent.get_tool_by_name", return_value=mock_tool):
             result = await execute_tool("test_tool", {"arg": "value"})
 
             assert result == "Tool result"
@@ -188,7 +188,7 @@ class TestExecuteTool:
     @pytest.mark.asyncio
     async def test_execute_unknown_tool(self):
         """Test executing an unknown tool."""
-        with patch("agent.get_tool_by_name", return_value=None):
+        with patch("squidbot.agent.get_tool_by_name", return_value=None):
             result = await execute_tool("unknown_tool", {})
 
             assert "Error" in result
@@ -200,7 +200,7 @@ class TestExecuteTool:
         mock_tool = MagicMock()
         mock_tool.execute = AsyncMock(side_effect=Exception("Tool failed"))
 
-        with patch("agent.get_tool_by_name", return_value=mock_tool):
+        with patch("squidbot.agent.get_tool_by_name", return_value=mock_tool):
             result = await execute_tool("failing_tool", {})
 
             assert "Error" in result
@@ -213,7 +213,7 @@ class TestRunAgentWithHistory:
     @pytest.mark.asyncio
     async def test_run_agent_updates_history(self):
         """Test that history is updated after agent run."""
-        with patch("agent.run_agent", new_callable=AsyncMock) as mock_run:
+        with patch("squidbot.agent.run_agent", new_callable=AsyncMock) as mock_run:
             mock_run.return_value = "Agent response"
 
             response, history = await run_agent_with_history("Hello", [])
@@ -233,7 +233,7 @@ class TestRunAgentWithHistory:
             {"role": "assistant", "content": "Previous response"},
         ]
 
-        with patch("agent.run_agent", new_callable=AsyncMock) as mock_run:
+        with patch("squidbot.agent.run_agent", new_callable=AsyncMock) as mock_run:
             mock_run.return_value = "New response"
 
             response, history = await run_agent_with_history(
@@ -253,7 +253,7 @@ class TestRunAgentWithHistory:
             long_history.append({"role": "user", "content": f"Message {i}"})
             long_history.append({"role": "assistant", "content": f"Response {i}"})
 
-        with patch("agent.run_agent", new_callable=AsyncMock) as mock_run:
+        with patch("squidbot.agent.run_agent", new_callable=AsyncMock) as mock_run:
             mock_run.return_value = "New response"
 
             response, history = await run_agent_with_history(
@@ -283,12 +283,12 @@ class TestRunAgentMocked:
         mock_client = MagicMock()
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
-        with patch("agent.client", mock_client), patch(
-            "agent.build_system_prompt", new_callable=AsyncMock
-        ) as mock_prompt, patch("agent.get_openai_tools", return_value=[]):
+        with patch("squidbot.agent.client", mock_client), patch(
+            "squidbot.agent.build_system_prompt", new_callable=AsyncMock
+        ) as mock_prompt, patch("squidbot.agent.get_openai_tools", return_value=[]):
             mock_prompt.return_value = "System prompt"
 
-            from agent import run_agent
+            from squidbot.agent import run_agent
 
             response = await run_agent("Hi")
 
@@ -319,14 +319,16 @@ class TestRunAgentMocked:
         mock_tool = MagicMock()
         mock_tool.execute = AsyncMock(return_value="Tool result")
 
-        with patch("agent.client", mock_client), patch(
-            "agent.build_system_prompt", new_callable=AsyncMock
-        ) as mock_prompt, patch("agent.get_openai_tools", return_value=[]), patch(
-            "agent.get_tool_by_name", return_value=mock_tool
+        with patch("squidbot.agent.client", mock_client), patch(
+            "squidbot.agent.build_system_prompt", new_callable=AsyncMock
+        ) as mock_prompt, patch(
+            "squidbot.agent.get_openai_tools", return_value=[]
+        ), patch(
+            "squidbot.agent.get_tool_by_name", return_value=mock_tool
         ):
             mock_prompt.return_value = "System prompt"
 
-            from agent import run_agent
+            from squidbot.agent import run_agent
 
             response = await run_agent("Do something", max_iterations=3)
 

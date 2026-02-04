@@ -1,8 +1,8 @@
 """Memory tools using SQLite with vector search."""
 
-from memory_db import (add_memory, delete_memory, load_all_memories,
-                       search_memory, search_memory_semantic)
-from tools.base import Tool
+from ..memory_db import (add_memory, delete_memory, load_all_memories,
+                         search_memory, search_memory_semantic)
+from .base import Tool
 
 
 class MemoryAddTool(Tool):

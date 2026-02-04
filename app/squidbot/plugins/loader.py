@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from plugins.base import Plugin
+    from .base import Plugin
 
-from tools.base import Tool
+from ..tools.base import Tool
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,8 @@ class PluginRegistry:
 
     def register(self, plugin: "Plugin") -> bool:
         """Register a plugin. Returns True if successful."""
-        from plugins.base import PluginApi
-        from plugins.hooks import get_hook_registry
+        from .base import PluginApi
+        from .hooks import get_hook_registry
 
         try:
             manifest = plugin.manifest
@@ -81,7 +81,7 @@ class PluginRegistry:
 
     def unregister(self, plugin_id: str) -> bool:
         """Unregister a plugin by ID."""
-        from plugins.hooks import get_hook_registry
+        from .hooks import get_hook_registry
 
         if plugin_id not in self._plugins:
             return False
@@ -147,7 +147,7 @@ class PluginRegistry:
 
     def list_plugins(self) -> list[dict]:
         """List all plugins with their status."""
-        from plugins.hooks import get_hook_registry
+        from .hooks import get_hook_registry
 
         hook_registry = get_hook_registry()
         result = []
@@ -183,7 +183,7 @@ def get_registry() -> PluginRegistry:
 
 def load_builtin_plugins() -> None:
     """Load all built-in plugins from the plugins directory."""
-    from plugins.base import Plugin
+    from .base import Plugin
 
     plugins_dir = Path(__file__).parent
 
@@ -195,7 +195,9 @@ def load_builtin_plugins() -> None:
             continue
 
         try:
-            module = importlib.import_module(f"plugins.{module_name}")
+            module = importlib.import_module(
+                f".{module_name}", package="squidbot.plugins"
+            )
 
             # Look for get_plugin() function or Plugin subclass
             if hasattr(module, "get_plugin"):

@@ -25,9 +25,10 @@ from openai import AsyncOpenAI
 pytestmark = pytest.mark.integration
 
 import agent as agent_module
-from agent import run_agent
-from memory_db import init_db
-from tools.cron import load_cron_jobs, save_cron_jobs
+
+from squidbot.agent import run_agent
+from squidbot.memory_db import init_db
+from squidbot.tools.cron import load_cron_jobs, save_cron_jobs
 
 # Replace agent's client with one using real API key
 agent_module.client = AsyncOpenAI(api_key=REAL_API_KEY)

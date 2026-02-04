@@ -7,12 +7,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from plugins.hooks import (AfterToolCallEvent, AgentEndEvent,
-                           BeforeAgentStartEvent, BeforeAgentStartResult,
-                           BeforeToolCallEvent, BeforeToolCallResult,
-                           HookContext, HookName, HookRegistry, HookRunner,
-                           MessageReceivedEvent, MessageSendingEvent,
-                           MessageSendingResult)
+from squidbot.plugins.hooks import (AfterToolCallEvent, AgentEndEvent,
+                                    BeforeAgentStartEvent,
+                                    BeforeAgentStartResult,
+                                    BeforeToolCallEvent, BeforeToolCallResult,
+                                    HookContext, HookName, HookRegistry,
+                                    HookRunner, MessageReceivedEvent,
+                                    MessageSendingEvent, MessageSendingResult)
 
 
 class TestHookRegistry:
@@ -262,7 +263,8 @@ class TestWeb3PluginHooks:
     @pytest.mark.asyncio
     async def test_web3_blocks_large_transactions(self):
         """Test Web3 plugin blocks transactions over 100 CRO."""
-        from plugins import get_hook_runner, get_registry, load_builtin_plugins
+        from squidbot.plugins import (get_hook_runner, get_registry,
+                                      load_builtin_plugins)
 
         load_builtin_plugins()
         runner = get_hook_runner()
@@ -283,7 +285,7 @@ class TestWeb3PluginHooks:
     @pytest.mark.asyncio
     async def test_web3_allows_small_transactions(self):
         """Test Web3 plugin allows transactions under 100 CRO."""
-        from plugins import get_hook_runner
+        from squidbot.plugins import get_hook_runner
 
         runner = get_hook_runner()
 
@@ -302,7 +304,7 @@ class TestWeb3PluginHooks:
     @pytest.mark.asyncio
     async def test_web3_ignores_other_tools(self):
         """Test Web3 hooks ignore non-web3 tools."""
-        from plugins import get_hook_runner
+        from squidbot.plugins import get_hook_runner
 
         runner = get_hook_runner()
 

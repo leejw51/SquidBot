@@ -95,7 +95,7 @@ def create_release_zip(output_dir: Path = None, version: str = None) -> Path:
 
     # Create zip file
     file_count = 0
-    with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(app_dir):
             root_path = Path(root)
 
@@ -130,23 +130,16 @@ def main():
 
     parser = argparse.ArgumentParser(description="Create SquidBot release archive")
     parser.add_argument(
-        "-o", "--output",
-        type=Path,
-        help="Output directory for the archive"
+        "-o", "--output", type=Path, help="Output directory for the archive"
     )
     parser.add_argument(
-        "-v", "--version",
-        type=str,
-        help="Version string for the archive name"
+        "-v", "--version", type=str, help="Version string for the archive name"
     )
 
     args = parser.parse_args()
 
     try:
-        archive_path = create_release_zip(
-            output_dir=args.output,
-            version=args.version
-        )
+        archive_path = create_release_zip(output_dir=args.output, version=args.version)
         print(f"\nRelease ready: {archive_path}")
         return 0
     except Exception as e:

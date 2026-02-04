@@ -18,10 +18,10 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-from plugins.base import Plugin, PluginApi, PluginManifest
-from plugins.hooks import (AfterToolCallEvent, BeforeToolCallEvent,
-                           BeforeToolCallResult, HookContext, HookName)
-from tools.base import Tool
+from ..tools.base import Tool
+from .base import Plugin, PluginApi, PluginManifest
+from .hooks import (AfterToolCallEvent, BeforeToolCallEvent,
+                    BeforeToolCallResult, HookContext, HookName)
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 
-from config import DATA_DIR, SQUID_PORT
+from .config import DATA_DIR, SQUID_PORT
 
 # Server configuration
 SERVER_HOST = "127.0.0.1"

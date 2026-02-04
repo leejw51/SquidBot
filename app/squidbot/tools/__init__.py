@@ -2,16 +2,15 @@
 
 import logging
 
-from tools.base import Tool
-from tools.browser import (BrowserClickTool, BrowserGetTextTool,
-                           BrowserNavigateTool, BrowserScreenshotTool,
-                           BrowserSnapshotTool, BrowserTypeTool)
-from tools.coding import get_coding_tools
-from tools.cron import (CronClearTool, CronCreateTool, CronDeleteTool,
-                        CronListTool)
-from tools.memory_tool import (MemoryAddTool, MemoryDeleteTool, MemoryListTool,
-                               MemorySearchTool)
-from tools.web_search import WebSearchTool
+from .base import Tool
+from .browser import (BrowserClickTool, BrowserGetTextTool,
+                      BrowserNavigateTool, BrowserScreenshotTool,
+                      BrowserSnapshotTool, BrowserTypeTool)
+from .coding import get_coding_tools
+from .cron import CronClearTool, CronCreateTool, CronDeleteTool, CronListTool
+from .memory_tool import (MemoryAddTool, MemoryDeleteTool, MemoryListTool,
+                          MemorySearchTool)
+from .web_search import WebSearchTool
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ def _load_plugins() -> None:
         return
 
     try:
-        from plugins import get_registry, load_builtin_plugins
+        from ..plugins import get_registry, load_builtin_plugins
 
         # Load all built-in plugins
         load_builtin_plugins()

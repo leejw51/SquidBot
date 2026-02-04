@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from scheduler import Scheduler
+from squidbot.scheduler import Scheduler
 
 
 class TestSchedulerInit:
@@ -258,8 +258,8 @@ class TestSchedulerOneTimeJobs:
         send_message = AsyncMock()
         run_agent = AsyncMock(return_value="Reminder executed")
 
-        with patch("scheduler.load_cron_jobs", return_value=mock_jobs), patch(
-            "scheduler.save_cron_jobs"
+        with patch("squidbot.scheduler.load_cron_jobs", return_value=mock_jobs), patch(
+            "squidbot.scheduler.save_cron_jobs"
         ) as mock_save:
             scheduler = Scheduler(
                 send_message=send_message,
@@ -288,7 +288,7 @@ class TestSchedulerOneTimeJobs:
 
         run_agent = AsyncMock()
 
-        with patch("scheduler.load_cron_jobs", return_value=mock_jobs):
+        with patch("squidbot.scheduler.load_cron_jobs", return_value=mock_jobs):
             scheduler = Scheduler(
                 send_message=AsyncMock(),
                 run_agent=run_agent,
@@ -321,8 +321,8 @@ class TestSchedulerIntervalJobs:
         send_message = AsyncMock()
         run_agent = AsyncMock(return_value="Interval executed")
 
-        with patch("scheduler.load_cron_jobs", return_value=mock_jobs), patch(
-            "scheduler.save_cron_jobs"
+        with patch("squidbot.scheduler.load_cron_jobs", return_value=mock_jobs), patch(
+            "squidbot.scheduler.save_cron_jobs"
         ) as mock_save:
             scheduler = Scheduler(
                 send_message=send_message,
@@ -352,7 +352,7 @@ class TestSchedulerIntervalJobs:
 
         run_agent = AsyncMock()
 
-        with patch("scheduler.load_cron_jobs", return_value=mock_jobs):
+        with patch("squidbot.scheduler.load_cron_jobs", return_value=mock_jobs):
             scheduler = Scheduler(
                 send_message=AsyncMock(),
                 run_agent=run_agent,

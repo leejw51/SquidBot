@@ -7,11 +7,11 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from character import get_character_prompt
-from config import DATA_DIR, OPENAI_API_KEY, OPENAI_MODEL
-from memory_db import get_memory_context
-from skills import get_skills_context
-from tools import get_openai_tools, get_tool_by_name
+from .character import get_character_prompt
+from .config import DATA_DIR, OPENAI_API_KEY, OPENAI_MODEL
+from .memory_db import get_memory_context
+from .skills import get_skills_context
+from .tools import get_openai_tools, get_tool_by_name
 
 logger = logging.getLogger(__name__)
 

@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from scheduler import Scheduler
-from tools.cron import (CronClearTool, CronCreateTool, CronDeleteTool,
-                        CronListTool, load_cron_jobs, save_cron_jobs)
+from squidbot.scheduler import Scheduler
+from squidbot.tools.cron import (CronClearTool, CronCreateTool, CronDeleteTool,
+                                 CronListTool, load_cron_jobs, save_cron_jobs)
 
 
 class TestCronTools:

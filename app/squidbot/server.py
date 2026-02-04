@@ -11,16 +11,16 @@ import json
 import logging
 import signal
 
-from agent import run_agent_with_history
-from channels import (ChannelRouter, MessagePayload, TCPAdapter,
-                      TelegramAdapter, get_channel_router)
-from config import (OPENAI_API_KEY, SQUID_PORT, TELEGRAM_BOT_TOKEN,
-                    init_default_files, show_startup_info)
-from lanes import LANE_CRON, LANE_MAIN, CommandLane
-from playwright_check import require_playwright_or_exit
-from scheduler import Scheduler
-from session import (ChannelType, DeliveryContext, Session,
-                     get_session_manager, record_inbound_session)
+from .agent import run_agent_with_history
+from .channels import (ChannelRouter, MessagePayload, TCPAdapter,
+                       TelegramAdapter, get_channel_router)
+from .config import (OPENAI_API_KEY, SQUID_PORT, TELEGRAM_BOT_TOKEN,
+                     init_default_files, show_startup_info)
+from .lanes import LANE_CRON, LANE_MAIN, CommandLane
+from .playwright_check import require_playwright_or_exit
+from .scheduler import Scheduler
+from .session import (ChannelType, DeliveryContext, Session,
+                      get_session_manager, record_inbound_session)
 
 # Server configuration
 SERVER_HOST = "127.0.0.1"
@@ -232,8 +232,12 @@ async def send_response_with_images(update, response: str):
     screenshots.extend(re.findall(pattern2, response))
 
     # Pattern 3: plain paths /tmp/squidbot_screenshot_*.png or /var/folders/.../squidbot_screenshot_*.png
-    pattern3 = r"(/(?:tmp|var/folders)[^\s`]*squidbot_screenshot_[^\s`]+\.png)"
+    pattern3 = r"(/(?:tmp|var/folders)[^\s`\)]*squidbot_screenshot_[^\s`\)]+\.png)"
     screenshots.extend(re.findall(pattern3, response))
+
+    # Pattern 4: markdown image syntax ![...](path)
+    pattern4 = r"!\[[^\]]*\]\(([^)]*squidbot_screenshot_[^)]+\.png)\)"
+    screenshots.extend(re.findall(pattern4, response))
 
     # Deduplicate
     screenshots = list(set(screenshots))
@@ -245,6 +249,10 @@ async def send_response_with_images(update, response: str):
         r"Saved at:\s*\n?\s*" + pattern2 + r"\s*\n?", "", text_response
     )
     text_response = re.sub(pattern2, "", text_response)
+    # Remove markdown image syntax ![...](screenshot_path)
+    text_response = re.sub(
+        r"!\[[^\]]*\]\([^)]*squidbot_screenshot_[^)]+\.png\)\s*", "", text_response
+    )
     text_response = text_response.strip()
 
     # Send text response if any
@@ -457,7 +465,7 @@ def main():
 
     if command in ("start", "stop", "stopall", "restart", "status", "logs"):
         # Delegate to daemon module
-        from daemon import main as daemon_main
+        from .daemon import main as daemon_main
 
         daemon_main()
     else:

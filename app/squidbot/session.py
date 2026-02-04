@@ -15,8 +15,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Iterator
 
-from config import DATA_DIR
-from lanes import CommandLane
+from .config import DATA_DIR
+from .lanes import CommandLane
 
 logger = logging.getLogger(__name__)
 

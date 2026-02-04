@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent import execute_tool, run_agent
-from tools import ALL_TOOLS, get_openai_tools, get_tool_by_name
+from squidbot.agent import execute_tool, run_agent
+from squidbot.tools import ALL_TOOLS, get_openai_tools, get_tool_by_name
 
 
 class TestToolRegistry:
@@ -242,7 +242,7 @@ class TestToolChainScenarios:
     @pytest.mark.asyncio
     async def test_memory_then_cron_workflow(self):
         """Test memory add then cron create (remember X and remind me)."""
-        from tools.cron import save_cron_jobs
+        from squidbot.tools.cron import save_cron_jobs
 
         save_cron_jobs([])
 
@@ -270,7 +270,7 @@ class TestToolChainScenarios:
     @pytest.mark.asyncio
     async def test_cron_clear_workflow(self):
         """Test creating multiple cron jobs then clearing all."""
-        from tools.cron import load_cron_jobs, save_cron_jobs
+        from squidbot.tools.cron import load_cron_jobs, save_cron_jobs
 
         save_cron_jobs([])
 
@@ -296,7 +296,7 @@ class TestToolChainScenarios:
     @pytest.mark.asyncio
     async def test_web_search_mock(self):
         """Test web search tool with mocked DDGS."""
-        with patch("tools.web_search.DDGS") as mock_ddgs:
+        with patch("squidbot.tools.web_search.DDGS") as mock_ddgs:
             mock_instance = MagicMock()
             mock_instance.__enter__ = MagicMock(return_value=mock_instance)
             mock_instance.__exit__ = MagicMock(return_value=False)
@@ -316,7 +316,7 @@ class TestToolChainScenarios:
     @pytest.mark.asyncio
     async def test_search_then_memory_workflow(self):
         """Test web search then store result in memory."""
-        with patch("tools.web_search.DDGS") as mock_ddgs:
+        with patch("squidbot.tools.web_search.DDGS") as mock_ddgs:
             mock_instance = MagicMock()
             mock_instance.__enter__ = MagicMock(return_value=mock_instance)
             mock_instance.__exit__ = MagicMock(return_value=False)
@@ -356,7 +356,7 @@ class TestToolChainingErrors:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_cron(self):
         """Test deleting a cron job that doesn't exist."""
-        from tools.cron import save_cron_jobs
+        from squidbot.tools.cron import save_cron_jobs
 
         save_cron_jobs([])
 

@@ -106,13 +106,11 @@ def start():
     # Ensure data directory exists
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    main_script = SCRIPT_DIR / "server.py"
-
     # Show environment info to console
     show_env_info()
 
     # Check Playwright before starting (so user sees errors immediately)
-    from playwright_check import require_playwright_or_exit
+    from .playwright_check import require_playwright_or_exit
 
     require_playwright_or_exit()
 
@@ -122,12 +120,13 @@ def start():
     # Open log file
     log_fd = open(LOG_FILE, "a")
 
-    # Start the process
+    # Start the process using module execution
+    # cwd must be parent of squidbot package (app directory)
     process = subprocess.Popen(
-        [sys.executable, str(main_script)],
+        [sys.executable, "-m", "squidbot.server"],
         stdout=log_fd,
         stderr=log_fd,
-        cwd=str(SCRIPT_DIR),
+        cwd=str(SCRIPT_DIR.parent),
         start_new_session=True,  # Detach from terminal
     )
 

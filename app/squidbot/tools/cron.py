@@ -4,8 +4,8 @@ import json
 from datetime import datetime, timedelta
 from typing import Optional
 
-from config import CRON_FILE
-from tools.base import Tool
+from ..config import CRON_FILE
+from .base import Tool
 
 
 def load_cron_jobs() -> list[dict]:

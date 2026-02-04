@@ -4,9 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from tools.cron import CronCreateTool, CronDeleteTool, CronListTool
-from tools.memory_tool import MemoryAddTool, MemoryListTool, MemorySearchTool
-from tools.web_search import WebSearchTool
+from squidbot.tools.cron import CronCreateTool, CronDeleteTool, CronListTool
+from squidbot.tools.memory_tool import (MemoryAddTool, MemoryListTool,
+                                        MemorySearchTool)
+from squidbot.tools.web_search import WebSearchTool
 
 
 class TestMemoryTools:
@@ -92,7 +93,7 @@ class TestWebSearchTool:
             },
         ]
 
-        with patch("tools.web_search.DDGS") as mock_ddgs:
+        with patch("squidbot.tools.web_search.DDGS") as mock_ddgs:
             mock_instance = MagicMock()
             mock_instance.__enter__ = MagicMock(return_value=mock_instance)
             mock_instance.__exit__ = MagicMock(return_value=False)
@@ -110,7 +111,7 @@ class TestWebSearchTool:
         """Test WebSearchTool with no results."""
         tool = WebSearchTool()
 
-        with patch("tools.web_search.DDGS") as mock_ddgs:
+        with patch("squidbot.tools.web_search.DDGS") as mock_ddgs:
             mock_instance = MagicMock()
             mock_instance.__enter__ = MagicMock(return_value=mock_instance)
             mock_instance.__exit__ = MagicMock(return_value=False)
@@ -126,7 +127,7 @@ class TestWebSearchTool:
         """Test WebSearchTool error handling."""
         tool = WebSearchTool()
 
-        with patch("tools.web_search.DDGS") as mock_ddgs:
+        with patch("squidbot.tools.web_search.DDGS") as mock_ddgs:
             mock_ddgs.side_effect = Exception("Network error")
 
             result = await tool.execute(query="test")

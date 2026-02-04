@@ -21,9 +21,8 @@ os.environ["HEARTBEAT_INTERVAL_MINUTES"] = "0"
 @pytest.fixture(autouse=True)
 def temp_data_dir(tmp_path, monkeypatch):
     """Create a temporary data directory for tests - auto-used for all tests."""
-    import config
-    import memory_db
-    from tools import cron
+    from squidbot import config, memory_db
+    from squidbot.tools import cron
 
     # Create temp paths
     temp_db = tmp_path / "memory.db"
@@ -56,7 +55,7 @@ def temp_data_dir(tmp_path, monkeypatch):
 @pytest.fixture
 def mock_openai_client():
     """Mock OpenAI client for testing."""
-    with patch("agent.client") as mock_client:
+    with patch("squidbot.agent.client") as mock_client:
         yield mock_client
 
 

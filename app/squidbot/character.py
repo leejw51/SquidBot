@@ -5,7 +5,7 @@ from pathlib import Path
 
 import aiofiles
 
-from config import DATA_DIR
+from .config import DATA_DIR
 
 # Character configuration from environment
 CHARACTER_NAME = os.environ.get("CHARACTER_NAME", "Assistant")

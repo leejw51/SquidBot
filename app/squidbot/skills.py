@@ -7,7 +7,7 @@ from typing import Optional
 
 import aiofiles
 
-from config import DATA_DIR
+from .config import DATA_DIR
 
 SKILLS_DIR = DATA_DIR / "skills"
 

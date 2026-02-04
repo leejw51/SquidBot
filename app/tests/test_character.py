@@ -17,8 +17,8 @@ class TestLoadCharacterFile:
             char_file = Path(tmpdir) / "CHARACTER.md"
             char_file.write_text("# My Character\nI am helpful.")
 
-            with patch("character.CHARACTER_FILE", char_file):
-                from character import load_character_file
+            with patch("squidbot.character.CHARACTER_FILE", char_file):
+                from squidbot.character import load_character_file
 
                 content = await load_character_file()
 
@@ -28,8 +28,8 @@ class TestLoadCharacterFile:
     @pytest.mark.asyncio
     async def test_load_nonexistent_file(self):
         """Test loading when file doesn't exist."""
-        with patch("character.CHARACTER_FILE", Path("/nonexistent/file.md")):
-            from character import load_character_file
+        with patch("squidbot.character.CHARACTER_FILE", Path("/nonexistent/file.md")):
+            from squidbot.character import load_character_file
 
             content = await load_character_file()
 
@@ -42,12 +42,14 @@ class TestGetCharacterPrompt:
     @pytest.mark.asyncio
     async def test_default_character(self):
         """Test with default character (no customization)."""
-        with patch("character.CHARACTER_NAME", "Assistant"), patch(
-            "character.CHARACTER_PERSONA", ""
-        ), patch("character.CHARACTER_STYLE", "helpful, friendly, concise"), patch(
-            "character.CHARACTER_FILE", Path("/nonexistent")
+        with patch("squidbot.character.CHARACTER_NAME", "Assistant"), patch(
+            "squidbot.character.CHARACTER_PERSONA", ""
+        ), patch(
+            "squidbot.character.CHARACTER_STYLE", "helpful, friendly, concise"
+        ), patch(
+            "squidbot.character.CHARACTER_FILE", Path("/nonexistent")
         ):
-            from character import get_character_prompt
+            from squidbot.character import get_character_prompt
 
             prompt = await get_character_prompt()
 
@@ -58,12 +60,12 @@ class TestGetCharacterPrompt:
     @pytest.mark.asyncio
     async def test_custom_name(self):
         """Test with custom character name."""
-        with patch("character.CHARACTER_NAME", "Squidward"), patch(
-            "character.CHARACTER_PERSONA", ""
-        ), patch("character.CHARACTER_STYLE", ""), patch(
-            "character.CHARACTER_FILE", Path("/nonexistent")
+        with patch("squidbot.character.CHARACTER_NAME", "Squidward"), patch(
+            "squidbot.character.CHARACTER_PERSONA", ""
+        ), patch("squidbot.character.CHARACTER_STYLE", ""), patch(
+            "squidbot.character.CHARACTER_FILE", Path("/nonexistent")
         ):
-            from character import get_character_prompt
+            from squidbot.character import get_character_prompt
 
             prompt = await get_character_prompt()
 
@@ -72,12 +74,12 @@ class TestGetCharacterPrompt:
     @pytest.mark.asyncio
     async def test_custom_persona(self):
         """Test with custom persona."""
-        with patch("character.CHARACTER_NAME", "Assistant"), patch(
-            "character.CHARACTER_PERSONA", "You are a wise sage."
-        ), patch("character.CHARACTER_STYLE", ""), patch(
-            "character.CHARACTER_FILE", Path("/nonexistent")
+        with patch("squidbot.character.CHARACTER_NAME", "Assistant"), patch(
+            "squidbot.character.CHARACTER_PERSONA", "You are a wise sage."
+        ), patch("squidbot.character.CHARACTER_STYLE", ""), patch(
+            "squidbot.character.CHARACTER_FILE", Path("/nonexistent")
         ):
-            from character import get_character_prompt
+            from squidbot.character import get_character_prompt
 
             prompt = await get_character_prompt()
 
@@ -86,12 +88,12 @@ class TestGetCharacterPrompt:
     @pytest.mark.asyncio
     async def test_all_empty(self):
         """Test with all character options empty."""
-        with patch("character.CHARACTER_NAME", "Assistant"), patch(
-            "character.CHARACTER_PERSONA", ""
-        ), patch("character.CHARACTER_STYLE", ""), patch(
-            "character.CHARACTER_FILE", Path("/nonexistent")
+        with patch("squidbot.character.CHARACTER_NAME", "Assistant"), patch(
+            "squidbot.character.CHARACTER_PERSONA", ""
+        ), patch("squidbot.character.CHARACTER_STYLE", ""), patch(
+            "squidbot.character.CHARACTER_FILE", Path("/nonexistent")
         ):
-            from character import get_character_prompt
+            from squidbot.character import get_character_prompt
 
             prompt = await get_character_prompt()
 
@@ -104,12 +106,12 @@ class TestGetCharacterPrompt:
             char_file = Path(tmpdir) / "CHARACTER.md"
             char_file.write_text("# Custom\nI am a custom character.")
 
-            with patch("character.CHARACTER_NAME", "Assistant"), patch(
-                "character.CHARACTER_PERSONA", ""
-            ), patch("character.CHARACTER_STYLE", ""), patch(
-                "character.CHARACTER_FILE", char_file
+            with patch("squidbot.character.CHARACTER_NAME", "Assistant"), patch(
+                "squidbot.character.CHARACTER_PERSONA", ""
+            ), patch("squidbot.character.CHARACTER_STYLE", ""), patch(
+                "squidbot.character.CHARACTER_FILE", char_file
             ):
-                from character import get_character_prompt
+                from squidbot.character import get_character_prompt
 
                 prompt = await get_character_prompt()
 
@@ -126,8 +128,8 @@ class TestCreateExampleCharacter:
         with tempfile.TemporaryDirectory() as tmpdir:
             char_file = Path(tmpdir) / "CHARACTER.md"
 
-            with patch("character.CHARACTER_FILE", char_file):
-                from character import create_example_character
+            with patch("squidbot.character.CHARACTER_FILE", char_file):
+                from squidbot.character import create_example_character
 
                 await create_example_character()
 
@@ -143,8 +145,8 @@ class TestCreateExampleCharacter:
             char_file = Path(tmpdir) / "CHARACTER.md"
             char_file.write_text("My custom character")
 
-            with patch("character.CHARACTER_FILE", char_file):
-                from character import create_example_character
+            with patch("squidbot.character.CHARACTER_FILE", char_file):
+                from squidbot.character import create_example_character
 
                 await create_example_character()
 

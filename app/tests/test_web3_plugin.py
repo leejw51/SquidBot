@@ -22,8 +22,20 @@ try:
 except ImportError:
     HAS_ETH_ACCOUNT = False
 
+# Check if mnemonic is available for wallet tests
+try:
+    import mnemonic
+
+    HAS_MNEMONIC = True
+except ImportError:
+    HAS_MNEMONIC = False
+
 requires_eth_account = pytest.mark.skipif(
     not HAS_ETH_ACCOUNT, reason="eth_account not installed"
+)
+
+requires_mnemonic = pytest.mark.skipif(
+    not HAS_MNEMONIC, reason="mnemonic not installed"
 )
 
 
@@ -32,14 +44,14 @@ class TestPluginSystem:
 
     def test_plugin_registry_import(self):
         """Test plugin registry can be imported."""
-        from plugins import PluginRegistry, get_registry
+        from squidbot.plugins import PluginRegistry, get_registry
 
         registry = get_registry()
         assert isinstance(registry, PluginRegistry)
 
     def test_load_builtin_plugins(self):
         """Test loading built-in plugins."""
-        from plugins import get_registry, load_builtin_plugins
+        from squidbot.plugins import get_registry, load_builtin_plugins
 
         load_builtin_plugins()
         registry = get_registry()
@@ -51,7 +63,7 @@ class TestPluginSystem:
 
     def test_web3_plugin_manifest(self):
         """Test web3 plugin manifest."""
-        from plugins import get_registry, load_builtin_plugins
+        from squidbot.plugins import get_registry, load_builtin_plugins
 
         load_builtin_plugins()
         registry = get_registry()
@@ -65,7 +77,7 @@ class TestPluginSystem:
 
     def test_web3_plugin_tools(self):
         """Test web3 plugin provides correct tools."""
-        from plugins import get_registry, load_builtin_plugins
+        from squidbot.plugins import get_registry, load_builtin_plugins
 
         load_builtin_plugins()
         registry = get_registry()
@@ -84,6 +96,7 @@ class TestPluginSystem:
 class TestWalletGeneration:
     """Test wallet generation and mnemonic handling."""
 
+    @requires_mnemonic
     def test_random_wallet_generation(self):
         """Test random wallet generation when no mnemonic set."""
         # Clear mnemonic to test random generation
@@ -91,7 +104,7 @@ class TestWalletGeneration:
             # Reimport to pick up new env
             import importlib
 
-            import plugins.web3_plugin as web3_module
+            import squidbot.plugins.web3_plugin as web3_module
 
             importlib.reload(web3_module)
 
@@ -110,7 +123,7 @@ class TestWalletGeneration:
         with patch.dict(os.environ, {"SQUIDBOT_MNEMONICS": test_mnemonic}):
             import importlib
 
-            import plugins.web3_plugin as web3_module
+            import squidbot.plugins.web3_plugin as web3_module
 
             importlib.reload(web3_module)
 
@@ -132,7 +145,7 @@ class TestWalletGeneration:
         ):
             import importlib
 
-            import plugins.web3_plugin as web3_module
+            import squidbot.plugins.web3_plugin as web3_module
 
             importlib.reload(web3_module)
             account0, _ = web3_module.get_wallet()
@@ -154,12 +167,12 @@ class TestWalletInfoTool:
     @pytest.mark.asyncio
     async def test_wallet_info_success(self):
         """Test wallet_info returns correct data."""
-        from plugins.web3_plugin import WalletInfoTool
+        from squidbot.plugins.web3_plugin import WalletInfoTool
 
         tool = WalletInfoTool()
 
         # Mock web3 connection
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_connected.return_value = True
             mock_web3.return_value = mock_w3
@@ -174,7 +187,7 @@ class TestWalletInfoTool:
 
     def test_wallet_info_tool_schema(self):
         """Test wallet_info tool has correct schema."""
-        from plugins.web3_plugin import WalletInfoTool
+        from squidbot.plugins.web3_plugin import WalletInfoTool
 
         tool = WalletInfoTool()
 
@@ -190,11 +203,11 @@ class TestGetBalanceTool:
     @pytest.mark.asyncio
     async def test_get_balance_own_wallet(self):
         """Test getting balance of own wallet."""
-        from plugins.web3_plugin import GetBalanceTool
+        from squidbot.plugins.web3_plugin import GetBalanceTool
 
         tool = GetBalanceTool()
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_address.return_value = True
             mock_w3.to_checksum_address.return_value = (
@@ -213,12 +226,12 @@ class TestGetBalanceTool:
     @pytest.mark.asyncio
     async def test_get_balance_specific_address(self):
         """Test getting balance of specific address."""
-        from plugins.web3_plugin import GetBalanceTool
+        from squidbot.plugins.web3_plugin import GetBalanceTool
 
         tool = GetBalanceTool()
         test_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f5c123"
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_address.return_value = True
             mock_w3.to_checksum_address.return_value = test_address
@@ -234,11 +247,11 @@ class TestGetBalanceTool:
     @pytest.mark.asyncio
     async def test_get_balance_invalid_address(self):
         """Test getting balance with invalid address."""
-        from plugins.web3_plugin import GetBalanceTool
+        from squidbot.plugins.web3_plugin import GetBalanceTool
 
         tool = GetBalanceTool()
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_address.return_value = False
             mock_web3.return_value = mock_w3
@@ -250,7 +263,7 @@ class TestGetBalanceTool:
 
     def test_get_balance_tool_schema(self):
         """Test get_balance tool has correct schema."""
-        from plugins.web3_plugin import GetBalanceTool
+        from squidbot.plugins.web3_plugin import GetBalanceTool
 
         tool = GetBalanceTool()
 
@@ -264,13 +277,13 @@ class TestSendCROTool:
     @pytest.mark.asyncio
     async def test_send_cro_success(self):
         """Test sending CRO successfully."""
-        from plugins.web3_plugin import SendCROTool
+        from squidbot.plugins.web3_plugin import SendCROTool
 
         tool = SendCROTool()
         to_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f5c123"
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3, patch(
-            "plugins.web3_plugin.get_wallet"
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3, patch(
+            "squidbot.plugins.web3_plugin.get_wallet"
         ) as mock_wallet:
 
             # Mock wallet
@@ -304,11 +317,11 @@ class TestSendCROTool:
     @pytest.mark.asyncio
     async def test_send_cro_invalid_address(self):
         """Test sending CRO to invalid address."""
-        from plugins.web3_plugin import SendCROTool
+        from squidbot.plugins.web3_plugin import SendCROTool
 
         tool = SendCROTool()
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_address.return_value = False
             mock_web3.return_value = mock_w3
@@ -320,7 +333,7 @@ class TestSendCROTool:
 
     def test_send_cro_tool_schema(self):
         """Test send_cro tool has correct schema."""
-        from plugins.web3_plugin import SendCROTool
+        from squidbot.plugins.web3_plugin import SendCROTool
 
         tool = SendCROTool()
 
@@ -338,11 +351,11 @@ class TestGetTxCountTool:
     @pytest.mark.asyncio
     async def test_get_tx_count_own_wallet(self):
         """Test getting tx count of own wallet."""
-        from plugins.web3_plugin import GetTxCountTool
+        from squidbot.plugins.web3_plugin import GetTxCountTool
 
         tool = GetTxCountTool()
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_address.return_value = True
             mock_w3.to_checksum_address.return_value = (
@@ -360,12 +373,12 @@ class TestGetTxCountTool:
     @pytest.mark.asyncio
     async def test_get_tx_count_specific_address(self):
         """Test getting tx count of specific address."""
-        from plugins.web3_plugin import GetTxCountTool
+        from squidbot.plugins.web3_plugin import GetTxCountTool
 
         tool = GetTxCountTool()
         test_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f5c123"
 
-        with patch("plugins.web3_plugin.get_web3") as mock_web3:
+        with patch("squidbot.plugins.web3_plugin.get_web3") as mock_web3:
             mock_w3 = MagicMock()
             mock_w3.is_address.return_value = True
             mock_w3.to_checksum_address.return_value = test_address
@@ -380,7 +393,7 @@ class TestGetTxCountTool:
 
     def test_get_tx_count_tool_schema(self):
         """Test get_tx_count tool has correct schema."""
-        from plugins.web3_plugin import GetTxCountTool
+        from squidbot.plugins.web3_plugin import GetTxCountTool
 
         tool = GetTxCountTool()
 
@@ -393,7 +406,7 @@ class TestToolsIntegration:
 
     def test_plugin_tools_in_all_tools(self):
         """Test plugin tools are included in get_all_tools()."""
-        from tools import get_all_tools
+        from squidbot.tools import get_all_tools
 
         tools = get_all_tools()
         tool_names = [t.name for t in tools]
@@ -405,7 +418,7 @@ class TestToolsIntegration:
 
     def test_get_tool_by_name(self):
         """Test getting plugin tools by name."""
-        from tools import get_tool_by_name
+        from squidbot.tools import get_tool_by_name
 
         wallet_tool = get_tool_by_name("wallet_info")
         assert wallet_tool is not None
@@ -416,7 +429,7 @@ class TestToolsIntegration:
 
     def test_openai_tools_format(self):
         """Test plugin tools are in OpenAI format."""
-        from tools import get_openai_tools
+        from squidbot.tools import get_openai_tools
 
         openai_tools = get_openai_tools()
 
@@ -440,7 +453,7 @@ class TestLiveNetwork:
     @pytest.mark.asyncio
     async def test_live_get_balance(self):
         """Test getting balance from live network."""
-        from plugins.web3_plugin import GetBalanceTool
+        from squidbot.plugins.web3_plugin import GetBalanceTool
 
         tool = GetBalanceTool()
         # Use a known address with balance on Cronos testnet
@@ -455,7 +468,7 @@ class TestLiveNetwork:
     @pytest.mark.asyncio
     async def test_live_wallet_info(self):
         """Test wallet info from live network."""
-        from plugins.web3_plugin import WalletInfoTool
+        from squidbot.plugins.web3_plugin import WalletInfoTool
 
         tool = WalletInfoTool()
         result = await tool.execute()
